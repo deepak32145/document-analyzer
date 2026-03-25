@@ -481,6 +481,73 @@
         </div>
       </div>
 
+      <!-- ── Step 7: Document Analyzer ── -->
+      <div *ngIf="currentStep === 7">
+        <div class="step-header">
+          <h1 class="step-title">Document Analyzer</h1>
+          <p class="step-subtitle">Reviewing uploaded document for <strong>{{ businessName }}</strong></p>
+        </div>
+
+        <!-- Empty state -->
+        <div class="analyzer-empty" *ngIf="!documentObjectUrl">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p>No document was uploaded.</p>
+          <button class="btn-secondary" (click)="goToStep(4)">Go to Document Upload</button>
+        </div>
+
+        <!-- Split view: PDF left | Analysis right -->
+        <div class="analyzer-split" *ngIf="documentObjectUrl">
+
+          <!-- Left: PDF viewer -->
+          <div class="analyzer-pane analyzer-pane--pdf">
+            <div class="analyzer-pane-header">
+              <div class="analyzer-file-info">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>{{ uploadedFile?.name }}</span>
+                <span class="analyzer-doc-type">{{ getDocTypeLabel(documentType) }}</span>
+              </div>
+              <a class="analyzer-open-btn" [href]="documentRawUrl" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Open
+              </a>
+            </div>
+            <iframe class="analyzer-iframe" [src]="documentObjectUrl" title="Document Preview"></iframe>
+          </div>
+
+          <!-- Right: Analysis report -->
+          <div class="analyzer-pane analyzer-pane--report">
+            <div class="analyzer-pane-header">
+              <span>Analysis Report</span>
+            </div>
+            <div class="analyzer-report-body">
+              <div *ngIf="analysisHtml" [innerHTML]="analysisHtml"></div>
+              <div class="analyzer-no-analysis" *ngIf="!analysisHtml">
+                <p>Analysis not available for this document.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="step-actions" style="margin-top: 24px">
+          <button class="btn-secondary" (click)="goToStep(6)">Back to Review</button>
+          <a class="btn-primary btn-submit" routerLink="/">Back to Home</a>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>

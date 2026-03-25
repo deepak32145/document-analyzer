@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { SnackbarService } from '../snackbar';
 
 @Component({
@@ -25,6 +25,7 @@ export class BusinessFlow implements OnInit {
     { id: 4, label: 'Document Upload' },
     { id: 5, label: 'Account Services & Funding' },
     { id: 6, label: 'Application Review' },
+    { id: 7, label: 'Document Analyzer' },
   ];
 
   // ── Step 1 ─────────────────────────────────────────────
@@ -106,7 +107,7 @@ export class BusinessFlow implements OnInit {
   constructor(
     private http: HttpClient,
     private snackbar: SnackbarService,
-    private router: Router
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit() {
@@ -142,9 +143,23 @@ export class BusinessFlow implements OnInit {
     return this.documentTypes.find(d => d.value === value)?.label ?? value;
   }
 
+  documentObjectUrl: SafeResourceUrl | null = null;
+  documentRawUrl: string | null = null;
+  analysisHtml: SafeHtml | null = null;
+  private _rawAnalysisHtml: string | null = null;
+
   finish() { this.currentStep = 6; }
 
-  submitApplication() { this.router.navigate(['/']); }
+  submitApplication() {
+    if (this.uploadedFile) {
+      this.documentRawUrl = URL.createObjectURL(this.uploadedFile);
+      this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+    }
+    if (this._rawAnalysisHtml) {
+      this.analysisHtml = this.sanitizer.bypassSecurityTrustHtml(this._rawAnalysisHtml);
+    }
+    this.currentStep = 7;
+  }
 
   // ── Upload ─────────────────────────────────────────────
   triggerUpload() {
@@ -163,11 +178,12 @@ export class BusinessFlow implements OnInit {
     formData.append('document', file);
     formData.append('documentType', this.documentType);
 
-    this.http.post('http://localhost:3000/api/upload', formData).subscribe({
-      next: () => {
+    this.http.post<any>('http://localhost:3000/api/upload', formData).subscribe({
+      next: (res) => {
         this.uploading = false;
         this.uploadBtnText = 'Upload PDF';
         this.uploadedFile = file;
+        this._rawAnalysisHtml = res.analysis?.html ?? null;
         this.snackbar.success(`"${file.name}" uploaded successfully`);
       },
       error: (err: HttpErrorResponse) => {

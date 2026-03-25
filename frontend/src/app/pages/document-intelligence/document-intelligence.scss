@@ -190,3 +190,258 @@ $small-bp:   480px;
   min-width: 0;
   flex: 1;
 }
+
+// ── Upload Strip ────────────────────────────────────────────
+.upload-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 18px 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  flex-wrap: wrap;
+}
+
+.strip-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $text-mid;
+  margin-bottom: 7px;
+}
+
+.strip-field { display: flex; flex-direction: column; }
+
+.strip-divider {
+  width: 1px;
+  height: 40px;
+  background: $border;
+  align-self: flex-end;
+  margin-bottom: 2px;
+
+  @media (max-width: $mobile-bp) { display: none; }
+}
+
+.strip-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: #f0f8f2;
+  border: 1px solid #b8dfc4;
+  border-radius: 6px;
+  align-self: flex-end;
+
+  svg { color: $green-dark; flex-shrink: 0; }
+}
+
+.strip-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-dark;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.strip-meta {
+  font-size: 11px;
+  color: $text-mid;
+  white-space: nowrap;
+}
+
+// ── Analyzing skeleton ──────────────────────────────────────
+.analyzing-state {
+  padding: 32px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  animation: shimmer 1.4s infinite;
+  width: 80%;
+
+  &--wide  { width: 60%; height: 20px; margin-bottom: 18px; }
+  &--short { width: 40%; }
+}
+
+.analyzing-label {
+  font-size: 13px;
+  color: $text-light;
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ── Results split view ──────────────────────────────────────
+.results-split {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+
+  @media (max-width: 900px) { flex-direction: column; }
+}
+
+.results-pane {
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+
+  &--pdf      { flex: 1; min-width: 0; }
+  &--analysis { flex: 1; min-width: 0; }
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #f0f8f2;
+  border-bottom: 1px solid #b8dfc4;
+  font-size: 13px;
+  font-weight: 700;
+  color: $green-dark;
+}
+
+.pane-open-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $green-mid;
+  text-decoration: none;
+  border: 1px solid $green-mid;
+  border-radius: 4px;
+  padding: 3px 10px;
+  background: $white;
+  transition: background 0.15s;
+  &:hover { background: #f0f8f2; }
+}
+
+.pane-badge {
+  font-size: 11px;
+  font-weight: 400;
+  color: $text-mid;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 680px;
+  border: none;
+  display: block;
+  background: #f5f5f5;
+}
+
+.analysis-body {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: 720px;
+  background: $white;
+}
+
+// ── LLM-generated HTML classes ──────────────────────────────
+.analysis-body {
+
+  .llm-report { font-family: inherit; }
+
+  .llm-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: $green-dark;
+    margin: 0 0 10px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #b8dfc4;
+  }
+
+  .llm-summary {
+    font-size: 13px;
+    color: $text-mid;
+    line-height: 1.65;
+    margin: 0 0 24px;
+  }
+
+  .llm-section {
+    margin-bottom: 22px;
+  }
+
+  .llm-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: $text-mid;
+    border-bottom: 1px solid $border;
+    padding-bottom: 5px;
+    margin: 0 0 10px;
+  }
+
+  .llm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: $text-mid;
+      padding: 7px 10px;
+      background: #f4f6f4;
+      border-bottom: 1px solid $border;
+    }
+
+    tr { border-bottom: 1px solid #f0f0f0; }
+    tr:last-child { border-bottom: none; }
+    tr:nth-child(even) { background: #fafafa; }
+  }
+
+  .llm-key {
+    padding: 7px 10px;
+    color: $text-mid;
+    font-weight: 600;
+    width: 38%;
+    vertical-align: top;
+  }
+
+  .llm-val {
+    padding: 7px 10px;
+    color: $text-dark;
+    word-break: break-word;
+    vertical-align: top;
+  }
+
+  .llm-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &--positive { background: #e8f5ec; color: #1a5c2e; border: 1px solid #b8dfc4; }
+    &--negative { background: #fdecea; color: #922b21; border: 1px solid #f5b7b1; }
+    &--neutral  { background: #f4f6f4; color: $text-mid; border: 1px solid $border; }
+  }
+}

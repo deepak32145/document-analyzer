@@ -1,54 +1,89 @@
 <div class="di-page">
   <div class="page-header">
     <h1 class="page-title">Document Intelligence using LLM</h1>
-    <p class="page-subtitle">Select the document type, upload your PDF, and let AI do the rest</p>
+    <p class="page-subtitle">Select the document type, upload your PDF, and let AI extract and present all information</p>
   </div>
 
-  <!-- Grid Row -->
-  <div class="doc-grid">
+  <!-- Upload strip -->
+  <div class="upload-strip">
 
-    <!-- Column 1: Document Type -->
-    <div class="grid-col">
-      <div class="col-header">Document Type</div>
-      <div class="col-body">
-        <select class="doc-select" [(ngModel)]="documentType">
-          <option *ngFor="let opt of documentTypes" [value]="opt.value">{{ opt.label }}</option>
-        </select>
-      </div>
+    <!-- Document Type -->
+    <div class="strip-field">
+      <label class="strip-label">Document Type</label>
+      <select class="doc-select" [(ngModel)]="documentType">
+        <option *ngFor="let opt of documentTypes" [value]="opt.value">{{ opt.label }}</option>
+      </select>
     </div>
 
-    <!-- Column 2: Upload -->
-    <div class="grid-col">
-      <div class="col-header">Upload Document</div>
-      <div class="col-body">
-        <input
-          #fileInput
-          type="file"
-          accept="application/pdf"
-          style="display:none"
-          (change)="onFileSelected($event)"
-        />
-        <button class="upload-btn" (click)="triggerUpload()" [disabled]="uploading">
-          {{ uploadBtnText }}
-        </button>
+    <!-- Divider -->
+    <div class="strip-divider"></div>
 
-      </div>
+    <!-- Upload button -->
+    <div class="strip-field">
+      <label class="strip-label">Upload Document</label>
+      <input #fileInput type="file" accept="application/pdf" style="display:none" (change)="onFileSelected($event)" />
+      <button class="upload-btn" (click)="triggerUpload()" [disabled]="uploading">
+        <span class="spinner" *ngIf="uploading"></span>
+        <svg *ngIf="!uploading" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        {{ uploadBtnText }}
+      </button>
     </div>
 
-    <!-- Column 3: Uploaded Doc (shown after upload) -->
-    <div class="grid-col" *ngIf="uploadedFile">
-      <div class="col-header">Uploaded Document</div>
-      <div class="col-body uploaded-doc">
-        <button class="eye-btn" (click)="viewDocument()" title="View document">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
+    <!-- Uploaded file pill -->
+    <div class="strip-file" *ngIf="uploadedFile && !uploading">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span class="strip-filename">{{ uploadedFile.name }}</span>
+      <span class="strip-meta" *ngIf="analysisMeta">{{ analysisMeta.pages }}p &bull; {{ analysisMeta.words }} words</span>
+    </div>
+
+  </div>
+
+  <!-- Loading skeleton -->
+  <div class="analyzing-state" *ngIf="uploading">
+    <div class="skeleton-line skeleton-line--wide"></div>
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line skeleton-line--short"></div>
+    <p class="analyzing-label">Reading document and generating report...</p>
+  </div>
+
+  <!-- Results: split view -->
+  <div class="results-split" *ngIf="analysisHtml && !uploading">
+
+    <!-- Left: PDF viewer -->
+    <div class="results-pane results-pane--pdf">
+      <div class="pane-header">
+        <span>Original Document</span>
+        <a class="pane-open-btn" [href]="documentRawUrl" target="_blank">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
           </svg>
-        </button>
-        <span class="doc-name" [title]="uploadedFile.name">{{ uploadedFile.name }}</span>
+          Open
+        </a>
       </div>
+      <iframe class="pdf-iframe" [src]="documentObjectUrl" title="Document"></iframe>
+    </div>
+
+    <!-- Right: LLM analysis -->
+    <div class="results-pane results-pane--analysis">
+      <div class="pane-header">
+        <span>AI Analysis Report</span>
+        <span class="pane-badge" *ngIf="analysisMeta">{{ analysisMeta.pages }} page(s) &bull; {{ analysisMeta.words }} words</span>
+      </div>
+      <div class="analysis-body" [innerHTML]="analysisHtml"></div>
     </div>
 
   </div>
+
 </div>

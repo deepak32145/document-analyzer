@@ -11,11 +11,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "compromise": "^14.15.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
+    "natural": "^8.1.1",
     "nodemon": "^3.1.14",
-    "pdfkit": "^0.18.0"
+    "pdfjs-dist": "^5.5.207",
+    "pdfkit": "^0.18.0",
+    "pdfreader": "^3.0.8"
   }
 }
