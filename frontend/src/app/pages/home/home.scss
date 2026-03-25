@@ -1,0 +1,209 @@
+$green-dark:  #1a5c2e;
+$green-mid:   #2d7a42;
+$green-light: #3a9952;
+$red-accent:  #c0392b;
+$text-dark:   #222;
+$text-mid:    #555;
+$text-light:  #888;
+$border:      #ddd;
+$white:       #fff;
+$mobile-bp:   768px;
+$small-bp:    480px;
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// ── Header ───────────────────────────────────────────────
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 60px;
+  background: $white;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .brand-icon { color: $green-dark; font-size: 20px; font-weight: bold; }
+    .brand-name  { font-size: 18px; font-weight: 700; color: $green-dark; }
+  }
+
+  .header-divider {
+    width: 1px; height: 28px;
+    background: $border;
+    margin: 0 16px;
+
+    @media (max-width: $small-bp) { display: none; }
+  }
+
+  .header-title {
+    font-size: 14px;
+    color: $text-mid;
+
+    @media (max-width: $small-bp) { display: none; }
+  }
+}
+
+// ── Body layout ───────────────────────────────────────────
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// ── Sidebar ───────────────────────────────────────────────
+.sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, $green-dark 0%, $green-mid 60%, $green-light 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 0 24px;
+  flex-shrink: 0;
+
+  @media (max-width: $mobile-bp) {
+    width: 72px;  // collapsed to icon strip on tablet
+    padding: 24px 0;
+  }
+
+  @media (max-width: $small-bp) {
+    display: none; // fully hidden on phone — home is a landing, no nav needed
+  }
+
+  .sidebar-demo-label {
+    font-size: 22px;
+    font-weight: 700;
+    color: $white;
+    padding: 0 24px 24px;
+    border-bottom: 1px solid rgba($white, 0.15);
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+
+    @media (max-width: $mobile-bp) {
+      font-size: 15px;
+      padding: 0 12px 16px;
+      text-align: center;
+    }
+  }
+
+  .sidebar-spacer { flex: 1; }
+
+  .sidebar-footer-links {
+    font-size: 12px;
+    color: rgba($white, 0.7);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    padding: 0 12px;
+
+    @media (max-width: $mobile-bp) { font-size: 10px; }
+  }
+}
+
+// ── Main Content ──────────────────────────────────────────
+.main-content {
+  flex: 1;
+  padding: 48px 56px;
+  overflow-y: auto;
+  min-width: 0;
+
+  @media (max-width: $mobile-bp) { padding: 32px 28px; }
+  @media (max-width: $small-bp)  { padding: 24px 16px; }
+
+  .welcome-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: $green-dark;
+    margin-bottom: 8px;
+
+    @media (max-width: $small-bp) { font-size: 20px; }
+  }
+
+  .welcome-subtitle {
+    font-size: 15px;
+    color: $text-mid;
+    margin-bottom: 40px;
+
+    @media (max-width: $small-bp) { font-size: 13px; margin-bottom: 24px; }
+  }
+}
+
+// ── Use Case Cards ────────────────────────────────────────
+.use-case-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
+
+  @media (max-width: $small-bp) { gap: 14px; }
+}
+
+.use-case-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  @media (max-width: $small-bp) {
+    padding: 16px 18px;
+    gap: 14px;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-color: $green-mid;
+    .use-case-arrow { color: $green-dark; }
+  }
+
+  .use-case-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+
+    @media (max-width: $small-bp) { font-size: 24px; }
+  }
+
+  .use-case-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+
+    .use-case-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: $text-dark;
+
+      @media (max-width: $small-bp) { font-size: 14px; }
+    }
+
+    .use-case-desc {
+      font-size: 13px;
+      color: $text-light;
+
+      @media (max-width: $small-bp) { font-size: 12px; }
+    }
+  }
+
+  .use-case-arrow {
+    font-size: 28px;
+    color: $text-light;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+  }
+}

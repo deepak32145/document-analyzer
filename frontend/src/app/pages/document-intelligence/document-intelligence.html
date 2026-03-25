@@ -1,0 +1,54 @@
+<div class="di-page">
+  <div class="page-header">
+    <h1 class="page-title">Document Intelligence using LLM</h1>
+    <p class="page-subtitle">Select the document type, upload your PDF, and let AI do the rest</p>
+  </div>
+
+  <!-- Grid Row -->
+  <div class="doc-grid">
+
+    <!-- Column 1: Document Type -->
+    <div class="grid-col">
+      <div class="col-header">Document Type</div>
+      <div class="col-body">
+        <select class="doc-select" [(ngModel)]="documentType">
+          <option *ngFor="let opt of documentTypes" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Column 2: Upload -->
+    <div class="grid-col">
+      <div class="col-header">Upload Document</div>
+      <div class="col-body">
+        <input
+          #fileInput
+          type="file"
+          accept="application/pdf"
+          style="display:none"
+          (change)="onFileSelected($event)"
+        />
+        <button class="upload-btn" (click)="triggerUpload()" [disabled]="uploading">
+          {{ uploadBtnText }}
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Column 3: Uploaded Doc (shown after upload) -->
+    <div class="grid-col" *ngIf="uploadedFile">
+      <div class="col-header">Uploaded Document</div>
+      <div class="col-body uploaded-doc">
+        <button class="eye-btn" (click)="viewDocument()" title="View document">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+        <span class="doc-name" [title]="uploadedFile.name">{{ uploadedFile.name }}</span>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<div class="app-wrapper">
+  <!-- Header -->
+  <header class="app-header">
+    <!-- Hamburger (mobile only) -->
+    <button class="hamburger" (click)="toggleSidebar()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <a class="header-brand" routerLink="/" title="Back to Dashboard">
+      <span class="brand-icon">&#10022;</span>
+      <span class="brand-name">Citizens</span>
+    </a>
+    <div class="header-divider"></div>
+    <span class="header-title">Document Analysis POC</span>
+  </header>
+
+  <!-- Body -->
+  <div class="app-body">
+    <!-- Overlay backdrop (mobile) -->
+    <div class="sidebar-backdrop" *ngIf="sidebarOpen" (click)="closeSidebar()"></div>
+
+    <!-- Left Sidebar -->
+    <aside class="sidebar" [class.open]="sidebarOpen">
+      <div class="sidebar-demo-label">Demo</div>
+      <nav class="sidebar-nav">
+        <a routerLink="/document-intelligence" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+          Document Intelligence using LLM
+        </a>
+        <a routerLink="/relay" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+          Business Use Case 1 &mdash; Relay
+        </a>
+        <a routerLink="/vista" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
+          Business Use Case 2 &mdash; Vista
+        </a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer-links">Privacy | Security</div>
+    </aside>
+
+    <!-- Routed page content -->
+    <main class="main-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<!-- Global snackbar — sits above everything -->
+<app-snackbar />

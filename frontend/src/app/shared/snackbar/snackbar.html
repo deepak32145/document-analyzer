@@ -1,0 +1,9 @@
+<div class="snackbar" [ngClass]="type" *ngIf="visible">
+  <span class="snackbar-icon">
+    <span *ngIf="type === 'error'">✕</span>
+    <span *ngIf="type === 'success'">✓</span>
+    <span *ngIf="type === 'info'">ℹ</span>
+  </span>
+  <span class="snackbar-text">{{ message }}</span>
+  <button class="snackbar-close" (click)="dismiss()">&#10005;</button>
+</div>

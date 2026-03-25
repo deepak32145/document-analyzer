@@ -1,0 +1,192 @@
+$green-dark: #1a5c2e;
+$green-mid:  #2d7a42;
+$white:      #fff;
+$border:     #ddd;
+$text-dark:  #222;
+$text-mid:   #555;
+$text-light: #888;
+$red:        #c0392b;
+$mobile-bp:  768px;
+$small-bp:   480px;
+
+.di-page {
+  padding: 40px 48px;
+
+  @media (max-width: $mobile-bp) { padding: 28px 24px; }
+  @media (max-width: $small-bp)  { padding: 20px 16px; }
+}
+
+.page-header {
+  margin-bottom: 36px;
+
+  @media (max-width: $small-bp) { margin-bottom: 24px; }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: $green-dark;
+    margin-bottom: 6px;
+
+    @media (max-width: $small-bp) { font-size: 18px; }
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: $text-mid;
+
+    @media (max-width: $small-bp) { font-size: 12px; }
+  }
+}
+
+// ── Grid ──────────────────────────────────────────────────
+.doc-grid {
+  display: flex;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+  max-width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  // Stack vertically on mobile
+  @media (max-width: $mobile-bp) {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+.grid-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  border-right: 1px solid $border;
+
+  &:last-child { border-right: none; }
+
+  // On mobile: bottom border instead of right border
+  @media (max-width: $mobile-bp) {
+    min-width: unset;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid $border;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  .col-header {
+    padding: 12px 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: $text-mid;
+    background: #f4f6f4;
+    border-bottom: 1px solid $border;
+  }
+
+  .col-body {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+
+    @media (max-width: $small-bp) { padding: 16px; }
+  }
+}
+
+// ── Select ────────────────────────────────────────────────
+.doc-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  font-size: 14px;
+  color: $text-dark;
+  background: $white;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $green-mid;
+    box-shadow: 0 0 0 3px rgba($green-mid, 0.12);
+  }
+}
+
+// ── Upload Button ──────────────────────────────────────────
+.upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: $green-dark;
+  color: $white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+
+  @media (max-width: $small-bp) { width: 100%; justify-content: center; }
+
+  &:hover:not(:disabled) { background: $green-mid; }
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .upload-icon { font-size: 18px; line-height: 1; }
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba($white, 0.4);
+  border-top-color: $white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Uploaded Doc ───────────────────────────────────────────
+.uploaded-doc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eye-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  background: $white;
+  color: $green-dark;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: #f0f8f2;
+    border-color: $green-mid;
+  }
+}
+
+.doc-name {
+  font-size: 13px;
+  color: $text-dark;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}

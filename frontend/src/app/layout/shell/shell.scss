@@ -1,0 +1,197 @@
+$green-dark: #1a5c2e;
+$green-mid:  #2d7a42;
+$green-light:#3a9952;
+$white:      #fff;
+$border:     #ddd;
+$text-mid:   #555;
+$text-nav:         rgba($white, 0.75);
+$sidebar-width:    260px;
+$header-height:    60px;
+$mobile-bp:        768px;
+
+// ── Layout shell ─────────────────────────────────────────
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// ── Header ───────────────────────────────────────────────
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: $header-height;
+  background: $white;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+  z-index: 200;
+  gap: 0;
+
+  .hamburger {
+    display: none;          // hidden on desktop
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 12px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    transition: background 0.15s;
+
+    span {
+      display: block;
+      height: 2px;
+      background: $green-dark;
+      border-radius: 2px;
+      transition: transform 0.2s;
+    }
+
+    &:hover { background: rgba($green-dark, 0.07); }
+
+    @media (max-width: $mobile-bp) { display: flex; }
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+
+    &:hover { background: rgba($green-dark, 0.06); }
+
+    .brand-icon { color: $green-dark; font-size: 20px; font-weight: bold; }
+    .brand-name  { font-size: 18px; font-weight: 700; color: $green-dark; }
+  }
+
+  .header-divider {
+    width: 1px; height: 28px;
+    background: $border;
+    margin: 0 16px;
+    flex-shrink: 0;
+
+    @media (max-width: 480px) { display: none; }
+  }
+
+  .header-title {
+    font-size: 14px;
+    color: $text-mid;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @media (max-width: 480px) { display: none; }
+  }
+}
+
+// ── Body ─────────────────────────────────────────────────
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+// ── Backdrop (mobile) ────────────────────────────────────
+.sidebar-backdrop {
+  display: none;
+
+  @media (max-width: $mobile-bp) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 149;
+  }
+}
+
+// ── Sidebar ───────────────────────────────────────────────
+.sidebar {
+  width: $sidebar-width;
+  background: linear-gradient(180deg, $green-dark 0%, $green-mid 60%, $green-light 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 0 24px;
+  flex-shrink: 0;
+  transition: transform 0.28s ease;
+  z-index: 150;
+
+  // ── Mobile: hidden off-screen, slides in when .open ──
+  @media (max-width: $mobile-bp) {
+    position: fixed;
+    top: $header-height;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+
+    &.open { transform: translateX(0); }
+  }
+
+  .sidebar-demo-label {
+    font-size: 22px;
+    font-weight: 700;
+    color: $white;
+    padding: 0 24px 24px;
+    border-bottom: 1px solid rgba($white, 0.15);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+
+    .nav-item {
+      padding: 14px 24px;
+      color: $text-nav;
+      text-decoration: none;
+      font-size: 13.5px;
+      line-height: 1.4;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+      &:hover {
+        background: rgba($white, 0.1);
+        color: $white;
+      }
+
+      &.active {
+        background: rgba($white, 0.15);
+        color: $white;
+        border-left-color: $white;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .sidebar-spacer { flex: 1; }
+
+  .sidebar-footer-links {
+    font-size: 13px;
+    color: rgba($white, 0.7);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    padding: 0 24px;
+  }
+}
+
+// ── Main content ─────────────────────────────────────────
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: #f7f8f9;
+  min-width: 0;   // prevents flex overflow
+}
