@@ -4,6 +4,7 @@ const cors     = require('cors');
 const morgan   = require('morgan');
 const path     = require('path');
 const fs       = require('fs');
+const http     = require('http');
 const { analyzeDocument } = require('./analyzer');
 const { analyzeLlm }      = require('./llm-analyzer');
 
@@ -23,6 +24,12 @@ app.use(express.json());
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
+// ── Multer in-memory (for EC2 proxy — accepts any file type) ─
+const uploadMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
+
 // ── Multer config ────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -37,6 +44,49 @@ const upload = multer({
       ? cb(null, true)
       : cb(new Error('Only PDF files are accepted'));
   },
+});
+
+// ── POST /api/upload-ec2  (proxy → EC2 at 172.16.3.190) ─────
+app.post('/api/upload-ec2', uploadMemory.single('files'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received.' });
+
+  const boundary = '----FormBoundary' + Date.now().toString(16);
+  const header   = Buffer.from(
+    `--${boundary}\r\n` +
+    `Content-Disposition: form-data; name="files"; filename="${req.file.originalname}"\r\n` +
+    `Content-Type: ${req.file.mimetype}\r\n\r\n`
+  );
+  const footer = Buffer.from(`\r\n--${boundary}--\r\n`);
+  const body   = Buffer.concat([header, req.file.buffer, footer]);
+
+  const options = {
+    hostname: '172.16.3.190',
+    port: 80,
+    path: '/upload',
+    method: 'POST',
+    headers: {
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      'Content-Length': body.length,
+    },
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    let raw = '';
+    proxyRes.on('data', chunk => raw += chunk);
+    proxyRes.on('end', () => {
+      console.log(`[ec2-proxy] ${req.file.originalname} → ${proxyRes.statusCode}`);
+      try { res.status(proxyRes.statusCode).json(JSON.parse(raw)); }
+      catch { res.status(proxyRes.statusCode).send(raw); }
+    });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('[ec2-proxy error]', err.message);
+    res.status(502).json({ error: `Cannot reach EC2: ${err.message}` });
+  });
+
+  proxyReq.write(body);
+  proxyReq.end();
 });
 
 // ── POST /api/upload  (business flows — rule-based analysis) ─

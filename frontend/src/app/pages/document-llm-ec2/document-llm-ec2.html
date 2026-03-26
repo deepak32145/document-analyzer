@@ -1,0 +1,114 @@
+<div class="di-page">
+  <div class="page-header">
+    <h1 class="page-title">Document Intelligence using LLM (EC2)</h1>
+    <p class="page-subtitle">Select the document type, upload your file, and let the EC2-hosted model extract and present all information</p>
+  </div>
+
+  <!-- Upload strip -->
+  <div class="upload-strip">
+
+    <!-- Document Type -->
+    <div class="strip-field">
+      <label class="strip-label">Document Type</label>
+      <select class="doc-select" [(ngModel)]="documentType">
+        <option *ngFor="let opt of documentTypes" [value]="opt.value">{{ opt.label }}</option>
+      </select>
+    </div>
+
+    <!-- Divider -->
+    <div class="strip-divider"></div>
+
+    <!-- Upload button -->
+    <div class="strip-field">
+      <label class="strip-label">Upload Document</label>
+      <input #fileInput type="file" accept="image/*,application/pdf" style="display:none" (change)="onFileSelected($event)" />
+      <button class="upload-btn" (click)="triggerUpload()" [disabled]="uploading">
+        <span class="spinner" *ngIf="uploading"></span>
+        <svg *ngIf="!uploading" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        {{ uploadBtnText }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Uploaded file pill — separate row -->
+  <div class="file-row" *ngIf="uploadedFile && !uploading">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+    </svg>
+    <span class="strip-filename">{{ uploadedFile.name }}</span>
+    <span class="strip-meta">{{ (uploadedFile.size / 1024).toFixed(1) }} KB &bull; {{ uploadedFile.type || 'unknown type' }}</span>
+    <a class="pane-open-btn" [href]="documentRawUrl" target="_blank">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+      Open
+    </a>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div class="analyzing-state" *ngIf="uploading">
+    <div class="skeleton-line skeleton-line--wide"></div>
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line skeleton-line--short"></div>
+    <p class="analyzing-label">Sending to EC2 and generating report...</p>
+  </div>
+
+  <!-- Results: split view -->
+  <div class="results-split" *ngIf="responseData && !uploading">
+
+    <!-- Left: document / image preview -->
+    <div class="results-pane results-pane--pdf">
+      <div class="pane-header">
+        <span>Original Document</span>
+        <a class="pane-open-btn" [href]="documentRawUrl" target="_blank">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Open
+        </a>
+      </div>
+      <img *ngIf="isImage" class="doc-image" [src]="documentObjectUrl" [alt]="uploadedFile?.name" />
+      <iframe *ngIf="!isImage" class="pdf-iframe" [src]="documentObjectUrl" title="Document"></iframe>
+    </div>
+
+    <!-- Right: JSON key-value response -->
+    <div class="results-pane results-pane--analysis">
+      <div class="pane-header">
+        <span>EC2 Analysis Result</span>
+        <span class="pane-badge">{{ responseData.length }} field(s)</span>
+      </div>
+      <div class="analysis-body">
+        <table class="llm-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of responseData">
+              <td class="llm-key">{{ row.key }}</td>
+              <td class="llm-val">{{ row.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
