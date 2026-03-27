@@ -198,12 +198,20 @@ export class BusinessFlow implements OnInit {
   }
 
   private parseEc2Response(res: any): Ec2Result {
-    const textEntry = res.text_extract?.[0];
-    const nerEntry  = res.ner_results?.[0];
+    const textEntry   = res.text_extract?.[0];
+    const classEntry  = res.classification_results?.[0];
+    const nerEntry    = res.ner_results?.[0];
+    const structured  = res.strucured_data_extraction_results ?? [];
+
     return {
-      filename:      textEntry?.filename ?? '',
-      extractedText: textEntry?.text ?? '',
-      nerEntities:   (nerEntry?.ner_entities ?? []).map((e: any) => ({
+      filename:           textEntry?.filename ?? '',
+      docType:            textEntry?.doc_type ?? null,
+      extractedText:      textEntry?.text ?? '',
+      classificationText: classEntry?.text ?? '',
+      structuredData:     structured.map((item: any) =>
+        Object.entries(item).map(([k, v]) => ({ key: k, value: String(v ?? '') }))
+      ).flat(),
+      nerEntities: (nerEntry?.ner_entities ?? []).map((e: any) => ({
         text:  e.text,
         label: e.label,
         score: e.score,

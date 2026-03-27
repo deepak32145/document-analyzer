@@ -543,13 +543,38 @@
                   <p class="ec2-text-block">{{ ec2Result.extractedText }}</p>
                 </div>
 
+                <!-- Classification -->
+                <div class="ec2-section" *ngIf="ec2Result.docType">
+                  <div class="ec2-section-title">Document Classification</div>
+                  <table class="ec2-table">
+                    <tbody>
+                      <tr>
+                        <td class="ec2-key">Document Type</td>
+                        <td class="ec2-val">{{ ec2Result.docType }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Structured Data -->
+                <div class="ec2-section" *ngIf="ec2Result.structuredData.length > 0">
+                  <div class="ec2-section-title">Structured Data</div>
+                  <table class="ec2-table">
+                    <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                    <tbody>
+                      <tr *ngFor="let row of ec2Result.structuredData">
+                        <td class="ec2-key">{{ row.key }}</td>
+                        <td class="ec2-val">{{ row.value }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
                 <!-- Named Entities -->
                 <div class="ec2-section" *ngIf="ec2Result.nerEntities.length > 0">
                   <div class="ec2-section-title">Named Entities (NER)</div>
                   <table class="ec2-table">
-                    <thead>
-                      <tr><th>Entity</th><th>Type</th></tr>
-                    </thead>
+                    <thead><tr><th>Entity</th><th>Type</th></tr></thead>
                     <tbody>
                       <tr *ngFor="let entity of ec2Result.nerEntities">
                         <td class="ec2-val">{{ entity.text }}</td>
