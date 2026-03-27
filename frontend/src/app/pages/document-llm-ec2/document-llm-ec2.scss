@@ -276,6 +276,58 @@ $small-bp:   480px;
   background: $white;
 }
 
+// ── Analysis sections ───────────────────────────────────────
+.llm-section {
+  margin-bottom: 24px;
+}
+
+.llm-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: $text-mid;
+  border-bottom: 1px solid $border;
+  padding-bottom: 5px;
+  margin: 0 0 10px;
+}
+
+.llm-text-block {
+  font-size: 13px;
+  color: $text-dark;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid $border;
+  border-radius: 6px;
+}
+
+.entity-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f4f6f4;
+  color: $text-mid;
+  border: 1px solid $border;
+
+  &--org  { background: #e8f0fe; color: #1a56db; border-color: #a4c2f4; }
+  &--loc  { background: #e8f5ec; color: #1a5c2e; border-color: #b8dfc4; }
+  &--per  { background: #fff3e0; color: #b45309; border-color: #fcd29f; }
+  &--date { background: #fce8ff; color: #7e22ce; border-color: #e2adf4; }
+}
+
+.analyzer-no-analysis {
+  text-align: center;
+  padding: 40px 0;
+  color: $text-light;
+  font-size: 13px;
+}
+
 // ── Response table ───────────────────────────────────────────
 .llm-report { font-family: inherit; }
 

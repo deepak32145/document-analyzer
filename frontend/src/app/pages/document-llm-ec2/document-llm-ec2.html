@@ -44,7 +44,7 @@
       <polyline points="14 2 14 8 20 8"/>
     </svg>
     <span class="strip-filename">{{ uploadedFile.name }}</span>
-    <span class="strip-meta">{{ (uploadedFile.size / 1024).toFixed(1) }} KB &bull; {{ uploadedFile.type || 'unknown type' }}</span>
+    <span class="strip-meta">{{ (uploadedFile.size / 1024).toFixed(1) }} KB</span>
     <a class="pane-open-btn" [href]="documentRawUrl" target="_blank">
       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -65,7 +65,7 @@
   </div>
 
   <!-- Results: split view -->
-  <div class="results-split" *ngIf="responseData && !uploading">
+  <div class="results-split" *ngIf="ec2Result && !uploading">
 
     <!-- Left: document / image preview -->
     <div class="results-pane results-pane--pdf">
@@ -85,27 +85,49 @@
       <iframe *ngIf="!isImage" class="pdf-iframe" [src]="documentObjectUrl" title="Document"></iframe>
     </div>
 
-    <!-- Right: JSON key-value response -->
+    <!-- Right: EC2 analysis result -->
     <div class="results-pane results-pane--analysis">
       <div class="pane-header">
         <span>EC2 Analysis Result</span>
-        <span class="pane-badge">{{ responseData.length }} field(s)</span>
+        <span class="pane-badge">{{ ec2Result.filename }}</span>
       </div>
       <div class="analysis-body">
-        <table class="llm-table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of responseData">
-              <td class="llm-key">{{ row.key }}</td>
-              <td class="llm-val">{{ row.value }}</td>
-            </tr>
-          </tbody>
-        </table>
+
+        <!-- Extracted Text -->
+        <div class="llm-section" *ngIf="ec2Result.extractedText">
+          <div class="llm-section-title">Extracted Text</div>
+          <p class="llm-text-block">{{ ec2Result.extractedText }}</p>
+        </div>
+
+        <!-- Named Entities -->
+        <div class="llm-section" *ngIf="ec2Result.nerEntities.length > 0">
+          <div class="llm-section-title">Named Entities (NER)</div>
+          <table class="llm-table">
+            <thead>
+              <tr>
+                <th>Entity</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let entity of ec2Result.nerEntities">
+                <td class="llm-val">{{ entity.text }}</td>
+                <td class="llm-key">
+                  <span class="entity-badge" [class]="'entity-badge--' + entity.label.toLowerCase()">
+                    {{ entity.label }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- No data state -->
+        <div class="analyzer-no-analysis"
+             *ngIf="!ec2Result.extractedText && ec2Result.nerEntities.length === 0">
+          <p>No data was extracted from this document.</p>
+        </div>
+
       </div>
     </div>
 

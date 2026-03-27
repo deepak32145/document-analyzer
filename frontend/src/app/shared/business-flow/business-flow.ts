@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SnackbarService } from '../snackbar';
+import { Ec2Result } from '../../pages/document-llm-ec2/document-llm-ec2';
 
 @Component({
   selector: 'app-business-flow',
@@ -145,18 +146,16 @@ export class BusinessFlow implements OnInit {
 
   documentObjectUrl: SafeResourceUrl | null = null;
   documentRawUrl: string | null = null;
-  analysisHtml: SafeHtml | null = null;
-  private _rawAnalysisHtml: string | null = null;
+  ec2Result: Ec2Result | null = null;
+  isImage = false;
 
   finish() { this.currentStep = 6; }
 
   submitApplication() {
     if (this.uploadedFile) {
-      this.documentRawUrl = URL.createObjectURL(this.uploadedFile);
+      this.documentRawUrl    = URL.createObjectURL(this.uploadedFile);
       this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-    }
-    if (this._rawAnalysisHtml) {
-      this.analysisHtml = this.sanitizer.bypassSecurityTrustHtml(this._rawAnalysisHtml);
+      this.isImage           = this.uploadedFile.type.startsWith('image/');
     }
     this.currentStep = 7;
   }
@@ -171,24 +170,24 @@ export class BusinessFlow implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
-    this.uploading = true;
+    this.uploading     = true;
     this.uploadBtnText = 'Uploading...';
 
     const formData = new FormData();
-    formData.append('document', file);
+    formData.append('files', file);
     formData.append('documentType', this.documentType);
 
-    this.http.post<any>('http://localhost:3000/api/upload', formData).subscribe({
+    this.http.post<any>('http://localhost:3000/api/upload-ec2', formData).subscribe({
       next: (res) => {
-        this.uploading = false;
-        this.uploadBtnText = 'Upload PDF';
-        this.uploadedFile = file;
-        this._rawAnalysisHtml = res.analysis?.html ?? null;
+        this.uploading     = false;
+        this.uploadBtnText = 'Upload Document';
+        this.uploadedFile  = file;
+        this.ec2Result     = this.parseEc2Response(res);
         this.snackbar.success(`"${file.name}" uploaded successfully`);
       },
       error: (err: HttpErrorResponse) => {
-        this.uploading = false;
-        this.uploadBtnText = 'Upload PDF';
+        this.uploading     = false;
+        this.uploadBtnText = 'Upload Document';
         const msg = err.status === 0
           ? 'Cannot reach the server. Please ensure the backend is running.'
           : err.error?.error ?? `Upload failed (${err.status})`;
@@ -196,6 +195,20 @@ export class BusinessFlow implements OnInit {
         this.fileInput.nativeElement.value = '';
       }
     });
+  }
+
+  private parseEc2Response(res: any): Ec2Result {
+    const textEntry = res.text_extract?.[0];
+    const nerEntry  = res.ner_results?.[0];
+    return {
+      filename:      textEntry?.filename ?? '',
+      extractedText: textEntry?.text ?? '',
+      nerEntities:   (nerEntry?.ner_entities ?? []).map((e: any) => ({
+        text:  e.text,
+        label: e.label,
+        score: e.score,
+      })),
+    };
   }
 
   viewDocument() {

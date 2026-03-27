@@ -5,6 +5,13 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SnackbarService } from '../../shared/snackbar';
 
+export interface NerEntity { text: string; label: string; score: number | null; }
+export interface Ec2Result {
+  filename: string;
+  extractedText: string;
+  nerEntities: NerEntity[];
+}
+
 @Component({
   selector: 'app-document-llm-ec2',
   imports: [FormsModule, CommonModule],
@@ -19,7 +26,7 @@ export class DocumentLlmEc2 {
   uploading     = false;
   uploadBtnText = 'Upload & Analyze';
 
-  responseData: { key: string; value: string }[] | null = null;
+  ec2Result: Ec2Result | null = null;
   documentObjectUrl: SafeResourceUrl | null = null;
   documentRawUrl: string | null = null;
   isImage = false;
@@ -48,7 +55,7 @@ export class DocumentLlmEc2 {
 
     this.uploading     = true;
     this.uploadBtnText = 'Analyzing...';
-    this.responseData  = null;
+    this.ec2Result     = null;
     this.uploadedFile  = null;
 
     const formData = new FormData();
@@ -63,7 +70,7 @@ export class DocumentLlmEc2 {
         this.isImage       = file.type.startsWith('image/');
         this.documentRawUrl    = URL.createObjectURL(file);
         this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-        this.responseData  = this.flattenResponse(res);
+        this.ec2Result     = this.parseEc2Response(res);
         this.snackbar.success(`"${file.name}" analyzed successfully`);
       },
       error: (err: HttpErrorResponse) => {
@@ -78,20 +85,17 @@ export class DocumentLlmEc2 {
     });
   }
 
-  private flattenResponse(obj: any, prefix = ''): { key: string; value: string }[] {
-    const result: { key: string; value: string }[] = [];
-    for (const k of Object.keys(obj)) {
-      const fullKey = prefix ? `${prefix}.${k}` : k;
-      const val = obj[k];
-      if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
-        result.push(...this.flattenResponse(val, fullKey));
-      } else {
-        result.push({
-          key: fullKey,
-          value: Array.isArray(val) ? JSON.stringify(val, null, 2) : String(val ?? '')
-        });
-      }
-    }
-    return result;
+  private parseEc2Response(res: any): Ec2Result {
+    const textEntry  = res.text_extract?.[0];
+    const nerEntry   = res.ner_results?.[0];
+    return {
+      filename:      textEntry?.filename ?? '',
+      extractedText: textEntry?.text ?? '',
+      nerEntities:   (nerEntry?.ner_entities ?? []).map((e: any) => ({
+        text:  e.text,
+        label: e.label,
+        score: e.score,
+      })),
+    };
   }
 }

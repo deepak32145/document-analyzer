@@ -221,7 +221,7 @@
             <div class="doc-col">
               <div class="doc-col-header">Upload Document</div>
               <div class="doc-col-body">
-                <input #fileInput type="file" accept="application/pdf" style="display:none" (change)="onFileSelected($event)" />
+                <input #fileInput type="file" accept="image/*,application/pdf" style="display:none" (change)="onFileSelected($event)" />
                 <button class="upload-btn" (click)="triggerUpload()" [disabled]="uploading">
                   {{ uploadBtnText }}
                 </button>
@@ -502,7 +502,7 @@
         <!-- Split view: PDF left | Analysis right -->
         <div class="analyzer-split" *ngIf="documentObjectUrl">
 
-          <!-- Left: PDF viewer -->
+          <!-- Left: PDF / image viewer -->
           <div class="analyzer-pane analyzer-pane--pdf">
             <div class="analyzer-pane-header">
               <div class="analyzer-file-info">
@@ -524,17 +524,47 @@
                 Open
               </a>
             </div>
-            <iframe class="analyzer-iframe" [src]="documentObjectUrl" title="Document Preview"></iframe>
+            <img *ngIf="isImage" class="analyzer-image" [src]="documentObjectUrl" [alt]="uploadedFile?.name" />
+            <iframe *ngIf="!isImage" class="analyzer-iframe" [src]="documentObjectUrl" title="Document Preview"></iframe>
           </div>
 
-          <!-- Right: Analysis report -->
+          <!-- Right: EC2 analysis result -->
           <div class="analyzer-pane analyzer-pane--report">
             <div class="analyzer-pane-header">
-              <span>Analysis Report</span>
+              <span>EC2 Analysis Result</span>
+              <span class="analyzer-doc-type" *ngIf="ec2Result">{{ ec2Result.filename }}</span>
             </div>
             <div class="analyzer-report-body">
-              <div *ngIf="analysisHtml" [innerHTML]="analysisHtml"></div>
-              <div class="analyzer-no-analysis" *ngIf="!analysisHtml">
+              <ng-container *ngIf="ec2Result">
+
+                <!-- Extracted Text -->
+                <div class="ec2-section" *ngIf="ec2Result.extractedText">
+                  <div class="ec2-section-title">Extracted Text</div>
+                  <p class="ec2-text-block">{{ ec2Result.extractedText }}</p>
+                </div>
+
+                <!-- Named Entities -->
+                <div class="ec2-section" *ngIf="ec2Result.nerEntities.length > 0">
+                  <div class="ec2-section-title">Named Entities (NER)</div>
+                  <table class="ec2-table">
+                    <thead>
+                      <tr><th>Entity</th><th>Type</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let entity of ec2Result.nerEntities">
+                        <td class="ec2-val">{{ entity.text }}</td>
+                        <td class="ec2-key">
+                          <span class="entity-badge" [class]="'entity-badge--' + entity.label.toLowerCase()">
+                            {{ entity.label }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </ng-container>
+              <div class="analyzer-no-analysis" *ngIf="!ec2Result">
                 <p>Analysis not available for this document.</p>
               </div>
             </div>
