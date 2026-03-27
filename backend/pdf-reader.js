@@ -55,3 +55,8 @@ async function extractText(filePath) {
 }
 
 module.exports = { extractText };
+
+//"C:\Users\deepa\Downloads\ACK124459440080625.pdf"
+
+//curl -X POST http://172.16.3.190:80/upload --form "files=@\"C:\Users\deepa\Downloads\ACK124459440080625.pdf\""
+
