@@ -1,15 +1,227 @@
-.placeholder-page {
-  padding: 48px;
+$green-dark:  #1a5c2e;
+$green-mid:   #2d7a42;
+$green-light: #3a9952;
+$white:       #fff;
+$border:      #ddd;
+$bg:          #f0f4f1;
 
-  .page-title {
-    font-size: 26px;
-    font-weight: 600;
-    color: #1a5c2e;
-    margin-bottom: 8px;
+// ── Spinner Overlay ───────────────────────────────────────
+.spinner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  .spinner-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
   }
 
-  .page-subtitle {
+  .spinner {
+    width: 52px;
+    height: 52px;
+    border: 5px solid rgba($white, 0.3);
+    border-top-color: $white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .spinner-label {
+    color: $white;
     font-size: 14px;
-    color: #888;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Shared Screen Shell ───────────────────────────────────
+.relay-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: $bg;
+}
+
+// ── Shared Header ─────────────────────────────────────────
+.relay-header {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding: 0 24px;
+  background: $white;
+  border-bottom: 1px solid $border;
+  gap: 10px;
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    background: $green-dark;
+    color: $white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .brand-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: $green-dark;
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 24px;
+    background: $border;
+    margin: 0 4px;
+  }
+
+  .header-sub {
+    font-size: 13px;
+    color: #666;
+  }
+}
+
+// ── Onboarding Screen ─────────────────────────────────────
+.onboarding-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.onboarding-card {
+  background: $white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 52px 48px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+
+  .cc-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+  }
+
+  .onboarding-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: $green-dark;
+    margin: 0 0 12px;
+  }
+
+  .onboarding-subtitle {
+    font-size: 17px;
+    color: #333;
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+
+  .onboarding-hint {
+    font-size: 14px;
+    color: #777;
+    margin: 0 0 32px;
+  }
+}
+
+// ── Login Screen ──────────────────────────────────────────
+.login-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.login-card {
+  background: $white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 44px 40px;
+  max-width: 420px;
+  width: 100%;
+
+  .login-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $green-dark;
+    margin: 0 0 8px;
+  }
+
+  .login-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 28px;
+  }
+}
+
+// ── Form ──────────────────────────────────────────────────
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 6px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid $border;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #222;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: $green-mid;
+      box-shadow: 0 0 0 3px rgba($green-mid, 0.12);
+    }
+  }
+
+  &.has-error input {
+    border-color: #c0392b;
+  }
+}
+
+.login-error {
+  font-size: 13px;
+  color: #c0392b;
+  margin: -8px 0 16px;
+}
+
+// ── Shared Button ─────────────────────────────────────────
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: $green-dark;
+  color: $white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: $green-mid;
   }
 }

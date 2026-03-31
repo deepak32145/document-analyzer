@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" width="480" height="300">
+  <defs>
+    <linearGradient id="esBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f4c81;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a7fc1;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="esCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="480" height="300" rx="18" fill="url(#esBg)"/>
+  <!-- Subtle circle accents -->
+  <circle cx="400" cy="40"  r="90" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="60"  cy="260" r="70" fill="rgba(255,255,255,0.04)"/>
+
+  <!-- Document body -->
+  <rect x="110" y="30" width="200" height="240" rx="10" fill="white" opacity="0.97"/>
+  <!-- Document top fold -->
+  <path d="M270 30 L310 70 L270 70 Z" fill="#e2eaf4"/>
+  <path d="M270 30 L310 70 L270 70" fill="none" stroke="#c8d8ec" stroke-width="1"/>
+
+  <!-- Document header bar -->
+  <rect x="110" y="30" width="160" height="40" rx="10" fill="#0f4c81" opacity="0.9"/>
+  <rect x="200" y="30" width="70" height="40" fill="#0f4c81" opacity="0.9"/>
+  <text x="190" y="57" font-family="Arial" font-size="11" font-weight="700" fill="white" text-anchor="middle" letter-spacing="0.5">ACCOUNT STATEMENT</text>
+
+  <!-- Statement lines -->
+  <rect x="126" y="88"  width="80" height="6"  rx="3" fill="#1a7fc1" opacity="0.7"/>
+  <rect x="126" y="100" width="55" height="5"  rx="2.5" fill="#94a3b8" opacity="0.6"/>
+
+  <!-- Divider -->
+  <line x1="126" y1="116" x2="294" y2="116" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Row items -->
+  <rect x="126" y="124" width="60" height="5" rx="2.5" fill="#64748b" opacity="0.5"/>
+  <rect x="240" y="124" width="44" height="5" rx="2.5" fill="#16a34a" opacity="0.8"/>
+
+  <rect x="126" y="138" width="72" height="5" rx="2.5" fill="#64748b" opacity="0.5"/>
+  <rect x="240" y="138" width="36" height="5" rx="2.5" fill="#64748b" opacity="0.5"/>
+
+  <rect x="126" y="152" width="50" height="5" rx="2.5" fill="#64748b" opacity="0.5"/>
+  <rect x="240" y="152" width="50" height="5" rx="2.5" fill="#dc2626" opacity="0.7"/>
+
+  <rect x="126" y="166" width="68" height="5" rx="2.5" fill="#64748b" opacity="0.5"/>
+  <rect x="240" y="166" width="40" height="5" rx="2.5" fill="#16a34a" opacity="0.8"/>
+
+  <line x1="126" y1="180" x2="294" y2="180" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Mini bar chart -->
+  <rect x="130" y="230" width="14" height="28" rx="3" fill="#1a7fc1" opacity="0.5"/>
+  <rect x="150" y="218" width="14" height="40" rx="3" fill="#1a7fc1" opacity="0.7"/>
+  <rect x="170" y="222" width="14" height="36" rx="3" fill="#1a7fc1" opacity="0.6"/>
+  <rect x="190" y="210" width="14" height="48" rx="3" fill="#0f4c81" opacity="0.85"/>
+  <rect x="210" y="225" width="14" height="33" rx="3" fill="#1a7fc1" opacity="0.5"/>
+  <rect x="230" y="215" width="14" height="43" rx="3" fill="#1a7fc1" opacity="0.7"/>
+  <rect x="250" y="220" width="14" height="38" rx="3" fill="#1a7fc1" opacity="0.6"/>
+  <rect x="270" y="205" width="14" height="53" rx="3" fill="#0f4c81" opacity="0.9"/>
+
+  <!-- Right side - device mockup -->
+  <rect x="336" y="52" width="104" height="184" rx="12" fill="url(#esCard)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <!-- Screen -->
+  <rect x="344" y="68" width="88" height="140" rx="6" fill="rgba(255,255,255,0.1)"/>
+  <!-- Mini chart in device -->
+  <polyline points="352,180 365,162 378,168 391,148 404,155 417,138 424,145" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="352" y="82"  width="50" height="5" rx="2.5" fill="rgba(255,255,255,0.5)"/>
+  <rect x="352" y="94"  width="34" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
+  <rect x="352" y="108" width="60" height="4" rx="2" fill="rgba(255,255,255,0.25)"/>
+  <rect x="352" y="118" width="44" height="4" rx="2" fill="rgba(255,255,255,0.25)"/>
+  <!-- Home indicator -->
+  <rect x="374" y="218" width="36" height="4" rx="2" fill="rgba(255,255,255,0.35)"/>
+
+  <!-- Label at bottom -->
+  <text x="240" y="285" font-family="Arial" font-size="13" font-weight="700" fill="rgba(255,255,255,0.9)" text-anchor="middle" letter-spacing="0.5">eStatements &amp; Online Banking</text>
+</svg>

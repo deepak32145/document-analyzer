@@ -1,3 +1,34 @@
+<!-- ── YouTube-style submission progress bar ── -->
+<div class="yt-progress-bar" *ngIf="isSubmitting" [style.width.%]="submissionProgress"></div>
+
+<!-- ── Submission overlay ── -->
+<div class="submission-overlay" *ngIf="isSubmitting">
+  <div class="submission-card">
+    <div class="submission-spinner"></div>
+    <p class="submission-title">Your application is being submitted, please hold on…</p>
+    <p class="submission-appno">Application No. <strong>{{ applicationNumber }}</strong></p>
+  </div>
+</div>
+
+<!-- ── Disclosure modal ── -->
+<div class="disclosure-modal-backdrop" *ngIf="activeDisclosure" (click)="closeDisclosure()">
+  <div class="disclosure-modal" (click)="$event.stopPropagation()">
+    <div class="disclosure-modal-header">
+      <h3>{{ activeDisclosure.title }}</h3>
+      <button class="disclosure-close" (click)="closeDisclosure()">&#x2715;</button>
+    </div>
+    <div class="disclosure-modal-body">
+      <div class="fake-pdf">
+        <div class="fake-pdf-toolbar">
+          <span class="pdf-icon">&#128196;</span>
+          <span class="pdf-filename">{{ activeDisclosure.title }}.pdf</span>
+        </div>
+        <div class="fake-pdf-content">{{ activeDisclosure.body }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="flow-wrapper">
 
   <!-- Header -->
@@ -14,21 +45,22 @@
 
     <!-- Stepper Sidebar -->
     <aside class="stepper-sidebar">
+      <div *ngIf="useCase === 'vista'" class="stepper-vista-label">You are applying for a new customer</div>
       <div class="stepper-business-name">{{ businessName }}</div>
       <nav class="stepper-nav">
         <div class="step-item"
-             *ngFor="let step of steps"
+             *ngFor="let step of visibleSteps; let last = last"
              [class.active]="currentStep === step.id"
-             [class.completed]="currentStep > step.id"
+             [class.completed]="isStepCompleted(step.id)"
              (click)="goToStep(step.id)">
           <div class="step-indicator">
             <div class="step-circle">
-              <svg *ngIf="currentStep > step.id" width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <svg *ngIf="isStepCompleted(step.id)" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
               </svg>
-              <div class="step-dot" *ngIf="currentStep <= step.id"></div>
+              <div class="step-dot" *ngIf="!isStepCompleted(step.id)"></div>
             </div>
-            <div class="step-line" *ngIf="step.id < steps.length"></div>
+            <div class="step-line" *ngIf="!last"></div>
           </div>
           <span class="step-label">{{ step.label }}</span>
         </div>
@@ -38,6 +70,644 @@
 
     <!-- Main Content -->
     <main class="flow-content">
+
+      <!-- ── Step 12: Vista Welcome ── -->
+      <div *ngIf="currentStep === 12" class="vista-welcome">
+        <div class="vista-welcome-inner">
+
+          <div class="vista-hero-illustration">
+            <svg viewBox="0 0 420 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Sky -->
+              <rect width="420" height="260" rx="16" fill="#eef4ff"/>
+              <!-- Sun -->
+              <circle cx="340" cy="52" r="30" fill="#fde68a" opacity="0.8"/>
+              <circle cx="340" cy="52" r="22" fill="#fbbf24"/>
+              <!-- Clouds -->
+              <ellipse cx="80" cy="60" rx="38" ry="16" fill="white" opacity="0.9"/>
+              <ellipse cx="105" cy="52" rx="26" ry="16" fill="white" opacity="0.9"/>
+              <ellipse cx="58"  cy="55" rx="20" ry="13" fill="white" opacity="0.9"/>
+              <ellipse cx="260" cy="44" rx="28" ry="12" fill="white" opacity="0.75"/>
+              <ellipse cx="280" cy="38" rx="18" ry="11" fill="white" opacity="0.75"/>
+              <!-- Ground -->
+              <rect x="0" y="210" width="420" height="50" rx="0" fill="#d1fae5"/>
+              <!-- Main building -->
+              <rect x="140" y="80" width="140" height="132" rx="4" fill="#1e40af"/>
+              <!-- Building windows grid -->
+              <rect x="158" y="98"  width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="188" y="98"  width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="218" y="98"  width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="248" y="98"  width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="158" y="128" width="20" height="18" rx="2" fill="#93c5fd" opacity="0.9"/>
+              <rect x="188" y="128" width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="218" y="128" width="20" height="18" rx="2" fill="#93c5fd" opacity="0.9"/>
+              <rect x="248" y="128" width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="158" y="158" width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="188" y="158" width="20" height="18" rx="2" fill="#93c5fd" opacity="0.9"/>
+              <rect x="218" y="158" width="20" height="18" rx="2" fill="#bfdbfe" opacity="0.9"/>
+              <rect x="248" y="158" width="20" height="18" rx="2" fill="#93c5fd" opacity="0.9"/>
+              <!-- Building entrance -->
+              <rect x="189" y="182" width="42" height="30" rx="3" fill="#1e3a8a"/>
+              <rect x="196" y="188" width="12" height="24" rx="2" fill="#60a5fa" opacity="0.6"/>
+              <rect x="212" y="188" width="12" height="24" rx="2" fill="#60a5fa" opacity="0.6"/>
+              <!-- Building roof accent -->
+              <rect x="140" y="74" width="140" height="10" rx="2" fill="#1e3a8a"/>
+              <!-- Left small building -->
+              <rect x="60" y="130" width="70" height="82" rx="3" fill="#2d7a42"/>
+              <rect x="72"  y="144" width="14" height="12" rx="2" fill="#bbf7d0" opacity="0.8"/>
+              <rect x="93"  y="144" width="14" height="12" rx="2" fill="#bbf7d0" opacity="0.8"/>
+              <rect x="114" y="144" width="14" height="12" rx="2" fill="#bbf7d0" opacity="0.8"/>
+              <rect x="72"  y="166" width="14" height="12" rx="2" fill="#bbf7d0" opacity="0.8"/>
+              <rect x="93"  y="166" width="14" height="12" rx="2" fill="#bbf7d0" opacity="0.8"/>
+              <rect x="114" y="166" width="14" height="12" rx="2" fill="#bbf7d0" opacity="0.8"/>
+              <rect x="84" y="188" width="26" height="24" rx="2" fill="#166534"/>
+              <!-- Right small building -->
+              <rect x="290" y="150" width="70" height="62" rx="3" fill="#7c3aed"/>
+              <rect x="302" y="162" width="14" height="12" rx="2" fill="#ede9fe" opacity="0.8"/>
+              <rect x="322" y="162" width="14" height="12" rx="2" fill="#ede9fe" opacity="0.8"/>
+              <rect x="342" y="162" width="14" height="12" rx="2" fill="#ede9fe" opacity="0.8"/>
+              <rect x="302" y="182" width="14" height="12" rx="2" fill="#ede9fe" opacity="0.8"/>
+              <rect x="322" y="182" width="14" height="12" rx="2" fill="#ede9fe" opacity="0.8"/>
+              <rect x="342" y="182" width="14" height="12" rx="2" fill="#ede9fe" opacity="0.8"/>
+              <!-- Road -->
+              <rect x="0" y="218" width="420" height="14" fill="#94a3b8"/>
+              <rect x="0" y="223" width="420" height="4" fill="#64748b"/>
+              <!-- Road markings -->
+              <rect x="30"  y="224" width="30" height="2" fill="white" opacity="0.6"/>
+              <rect x="100" y="224" width="30" height="2" fill="white" opacity="0.6"/>
+              <rect x="170" y="224" width="30" height="2" fill="white" opacity="0.6"/>
+              <rect x="240" y="224" width="30" height="2" fill="white" opacity="0.6"/>
+              <rect x="310" y="224" width="30" height="2" fill="white" opacity="0.6"/>
+              <rect x="380" y="224" width="30" height="2" fill="white" opacity="0.6"/>
+              <!-- Trees -->
+              <rect x="36" y="188" width="6" height="22" fill="#92400e"/>
+              <circle cx="39" cy="182" r="14" fill="#16a34a"/>
+              <rect x="374" y="192" width="6" height="18" fill="#92400e"/>
+              <circle cx="377" cy="186" r="12" fill="#15803d"/>
+            </svg>
+          </div>
+
+          <div class="vista-welcome-text">
+            <p class="vista-welcome-tag">Citizens Bank — Business Banking</p>
+            <h1 class="vista-welcome-heading">Open a Business Account<br/>in minutes</h1>
+            <p class="vista-welcome-sub">Fast, secure, and fully digital. Get your Vista Capital business account set up today with guided assistance every step of the way.</p>
+          </div>
+
+          <button class="vista-start-btn" (click)="nextStep()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+            Start a New Application
+          </button>
+
+          <p class="vista-welcome-note">Estimated time: 10 – 15 minutes &nbsp;·&nbsp; Auto-saved as you go</p>
+        </div>
+      </div>
+
+      <!-- ── Step 14: Vista Product Selection ── -->
+      <div *ngIf="currentStep === 14">
+        <div class="step-header">
+          <h1 class="step-title">Product Selection</h1>
+          <p class="step-subtitle">Select one or more products you'd like to apply for</p>
+        </div>
+
+        <div class="form-card">
+          <div class="product-list">
+            <label class="product-option" *ngFor="let p of vistaProducts"
+                   [class.product-option--selected]="vistaSelectedProducts[p.id]">
+              <div class="product-checkbox-wrap">
+                <input type="checkbox" [(ngModel)]="vistaSelectedProducts[p.id]" />
+                <div class="product-custom-check" [class.checked]="vistaSelectedProducts[p.id]">
+                  <svg *ngIf="vistaSelectedProducts[p.id]" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="product-body">
+                <span class="product-label">{{ p.label }}</span>
+                <span class="product-desc">{{ p.description }}</span>
+              </div>
+            </label>
+          </div>
+
+          <p class="product-hint" *ngIf="!vistaHasProductSelected">
+            Please select at least one product to continue.
+          </p>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()" [disabled]="!vistaHasProductSelected">Submit</button>
+        </div>
+      </div>
+
+      <!-- ── Step 15: Vista Business Information ── -->
+      <div *ngIf="currentStep === 15">
+        <div class="step-header">
+          <h1 class="step-title">Business Information</h1>
+          <p class="step-subtitle">Tell us about your business structure and details</p>
+        </div>
+
+        <!-- Legal structure selector -->
+        <div class="form-card">
+          <div class="form-section-title">Legal Business Structure</div>
+          <div class="form-row">
+            <div class="form-field form-field--wide">
+              <label>Select a Legal Business Structure</label>
+              <select [(ngModel)]="vistaLegalStructure">
+                <option value="" disabled>— Select structure —</option>
+                <option *ngFor="let s of legalStructures15" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form revealed after selection -->
+        <ng-container *ngIf="vistaLegalStructure">
+
+          <div class="vista-biz-heading">Tell us about your business</div>
+
+          <!-- Section 1: General Information -->
+          <div class="form-card">
+            <div class="form-section-title">Section 1 — General Information</div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Nature of Business</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.natureOfBusiness" />
+              </div>
+              <div class="form-field">
+                <label>Legal Business Name</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.legalBusinessName" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Tax ID Type</label>
+                <select [(ngModel)]="vistaBusinessInfo.taxIdType">
+                  <option *ngFor="let t of taxIdTypes" [value]="t">{{ t }}</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>TIN Number</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.tinNumber" placeholder="XX-XXXXXXX" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Business Information -->
+          <div class="form-card">
+            <div class="form-section-title">Section 2 — Business Information</div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Business Phone</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.businessPhone" />
+              </div>
+              <div class="form-field">
+                <label>Business Email Address</label>
+                <input type="email" [(ngModel)]="vistaBusinessInfo.businessEmail" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>State</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.businessState" maxlength="2" />
+              </div>
+              <div class="form-field">
+                <label>Annual Revenue</label>
+                <div class="input-prefix-wrap">
+                  <span class="input-prefix">$</span>
+                  <input type="text" [(ngModel)]="vistaBusinessInfo.annualRevenue" class="input-with-prefix" />
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Annual Profit</label>
+                <div class="input-prefix-wrap">
+                  <span class="input-prefix">$</span>
+                  <input type="text" [(ngModel)]="vistaBusinessInfo.annualProfit" class="input-with-prefix" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Business Address -->
+          <div class="form-card">
+            <div class="form-section-title">Section 3 — Business Address</div>
+            <div class="form-row">
+              <div class="form-field form-field--wide">
+                <label>Address Line 1</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.addrLine1" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field form-field--wide">
+                <label>Address Line 2</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.addrLine2" placeholder="Suite, floor, unit (optional)" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>City</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.city" />
+              </div>
+              <div class="form-field">
+                <label>State</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.addrState" maxlength="2" />
+              </div>
+              <div class="form-field">
+                <label>ZIP Code</label>
+                <input type="text" [(ngModel)]="vistaBusinessInfo.zip" maxlength="5" />
+              </div>
+            </div>
+
+            <!-- Mailing address toggle -->
+            <div class="mailing-toggle-row">
+              <span class="mailing-toggle-label">Mailing address same as business address</span>
+              <button class="toggle-btn" [class.toggle-btn--on]="vistaBusinessInfo.mailingAddressSame"
+                      (click)="vistaBusinessInfo.mailingAddressSame = !vistaBusinessInfo.mailingAddressSame">
+                <span class="toggle-thumb"></span>
+              </button>
+              <span class="toggle-value-label">{{ vistaBusinessInfo.mailingAddressSame ? 'Yes' : 'No' }}</span>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <p class="product-hint" *ngIf="!vistaLegalStructure">Please select a legal business structure to continue.</p>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()" [disabled]="!vistaLegalStructure">Continue</button>
+        </div>
+      </div>
+
+      <!-- ── Step 16: Vista Business Information (continued) ── -->
+      <div *ngIf="currentStep === 16">
+        <div class="step-header">
+          <h1 class="step-title">You're moving right along!</h1>
+          <p class="step-subtitle">A few more questions about your business</p>
+        </div>
+
+        <div class="form-card">
+          <!-- NAICS code -->
+          <div class="biz2-question">
+            <label class="biz2-label">Your nature of business NAICS code</label>
+            <input type="text" [(ngModel)]="vistaBusinessInfo2.naicsCode" class="biz2-input" placeholder="e.g. 523930" />
+          </div>
+
+          <!-- Outside US -->
+          <div class="biz2-question">
+            <label class="biz2-label">Was your organisation outside of the US?</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="outsideUS" value="yes" [(ngModel)]="vistaBusinessInfo2.outsideUS" /> Yes</label>
+              <label class="radio-label"><input type="radio" name="outsideUS" value="no"  [(ngModel)]="vistaBusinessInfo2.outsideUS" /> No</label>
+            </div>
+          </div>
+
+          <!-- Publicly traded -->
+          <div class="biz2-question">
+            <label class="biz2-label">Is your business publicly traded?</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="pubTraded" value="yes" [(ngModel)]="vistaBusinessInfo2.publiclyTraded" /> Yes</label>
+              <label class="radio-label"><input type="radio" name="pubTraded" value="no"  [(ngModel)]="vistaBusinessInfo2.publiclyTraded" /> No</label>
+            </div>
+          </div>
+
+          <!-- Revenue > $200M -->
+          <div class="biz2-question">
+            <label class="biz2-label">Does your annual revenue exceed $200 million USD?</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="rev200" value="yes" [(ngModel)]="vistaBusinessInfo2.revenueExceeds200M" /> Yes</label>
+              <label class="radio-label"><input type="radio" name="rev200" value="no"  [(ngModel)]="vistaBusinessInfo2.revenueExceeds200M" /> No</label>
+            </div>
+          </div>
+
+          <!-- Customer base -->
+          <div class="biz2-question">
+            <label class="biz2-label">Are your customers primarily Domestic or International?</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="custBase" value="domestic"      [(ngModel)]="vistaBusinessInfo2.customerBase" /> Domestic</label>
+              <label class="radio-label"><input type="radio" name="custBase" value="international" [(ngModel)]="vistaBusinessInfo2.customerBase" /> International</label>
+              <label class="radio-label"><input type="radio" name="custBase" value="both"          [(ngModel)]="vistaBusinessInfo2.customerBase" /> Both</label>
+            </div>
+          </div>
+
+          <!-- Date of formation -->
+          <div class="biz2-question">
+            <label class="biz2-label">What is your date of formation?</label>
+            <input type="date" [(ngModel)]="vistaBusinessInfo2.dateOfFormation" class="biz2-input biz2-input--date" />
+          </div>
+
+          <!-- Sole proprietor -->
+          <div class="biz2-question biz2-question--last">
+            <label class="biz2-label">Are you a sole proprietor?</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="soleProp" value="yes" [(ngModel)]="vistaBusinessInfo2.isSoleProp" /> Yes</label>
+              <label class="radio-label"><input type="radio" name="soleProp" value="no"  [(ngModel)]="vistaBusinessInfo2.isSoleProp" /> No</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()">Continue</button>
+        </div>
+      </div>
+
+      <!-- ── Step 17: Vista Account Services & Funding ── -->
+      <div *ngIf="currentStep === 17">
+        <div class="step-header">
+          <h1 class="step-title">Account Services &amp; Funding</h1>
+          <p class="step-subtitle">Additional details for your business account</p>
+        </div>
+
+        <div class="form-card">
+          <p class="acct-intro">Please provide the below information to help us serve you better.</p>
+
+          <div class="acct-product-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            Business Advisor Checking
+          </div>
+
+          <!-- How do you plan to use this account -->
+          <div class="biz2-question">
+            <label class="biz2-label">How do you plan to use this account?</label>
+            <select [(ngModel)]="vistaAccountFunding.accountUsage" class="biz2-select">
+              <option *ngFor="let o of accountUsageOptions" [value]="o">{{ o }}</option>
+            </select>
+          </div>
+
+          <!-- Source of funds -->
+          <div class="biz2-question">
+            <label class="biz2-label">Source of Funds</label>
+            <select [(ngModel)]="vistaAccountFunding.sourceOfFunds" class="biz2-select">
+              <option *ngFor="let o of fundSourceOptions" [value]="o">{{ o }}</option>
+            </select>
+          </div>
+
+          <!-- Monthly cash in -->
+          <div class="biz2-question">
+            <label class="biz2-label">Monthly Anticipated Cash Activity In</label>
+            <div class="input-prefix-wrap" style="max-width:260px">
+              <span class="input-prefix">$</span>
+              <input type="text" [(ngModel)]="vistaAccountFunding.cashActivityIn" class="input-with-prefix" />
+            </div>
+          </div>
+
+          <!-- Monthly cash out -->
+          <div class="biz2-question">
+            <label class="biz2-label">Monthly Anticipated Cash Activity Out</label>
+            <div class="input-prefix-wrap" style="max-width:260px">
+              <span class="input-prefix">$</span>
+              <input type="text" [(ngModel)]="vistaAccountFunding.cashActivityOut" class="input-with-prefix" />
+            </div>
+          </div>
+
+          <!-- Internal transactions -->
+          <div class="biz2-question biz2-question--last">
+            <label class="biz2-label">Do you expect to routinely perform internal transactions through this account?</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="internalTx" value="yes" [(ngModel)]="vistaAccountFunding.internalTransactions" /> Yes</label>
+              <label class="radio-label"><input type="radio" name="internalTx" value="no"  [(ngModel)]="vistaAccountFunding.internalTransactions" /> No</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()">Continue</button>
+        </div>
+      </div>
+
+      <!-- ── Step 18: Vista Add-on Services ── -->
+      <div *ngIf="currentStep === 18">
+        <div class="step-header">
+          <h1 class="step-title">Final Stretch! 🎉</h1>
+          <p class="step-subtitle">Select the services you would like to add to your account</p>
+        </div>
+
+        <div class="addon-grid">
+
+          <!-- eStatements -->
+          <div class="addon-card" [class.addon-card--selected]="vistaAddons.estatements"
+               (click)="vistaAddons.estatements = !vistaAddons.estatements">
+            <div class="addon-select-badge" *ngIf="vistaAddons.estatements">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="7" fill="#1a5c2e"/>
+                <path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              Added
+            </div>
+            <img src="assets/estatement.svg" alt="eStatements" class="addon-img" />
+            <div class="addon-body">
+              <h3 class="addon-name">eStatements</h3>
+              <p class="addon-desc">Your deposit account will be enrolled in eStatements. You can view deposit account transactions through online or mobile banking — anytime, anywhere, paperless.</p>
+            </div>
+            <div class="addon-toggle-row">
+              <span class="addon-toggle-hint">{{ vistaAddons.estatements ? 'Tap to remove' : 'Tap to add' }}</span>
+              <div class="addon-pill" [class.addon-pill--on]="vistaAddons.estatements">
+                {{ vistaAddons.estatements ? 'Selected' : 'Add' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Debit Card -->
+          <div class="addon-card" [class.addon-card--selected]="vistaAddons.debitCard"
+               (click)="vistaAddons.debitCard = !vistaAddons.debitCard">
+            <div class="addon-select-badge" *ngIf="vistaAddons.debitCard">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="7" fill="#1a5c2e"/>
+                <path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              Added
+            </div>
+            <img src="assets/card-points.svg" alt="Business Debit Card" class="addon-img" />
+            <div class="addon-body">
+              <h3 class="addon-name">Debit Card</h3>
+              <p class="addon-desc">Get a debit card for your business account with instant access to funds, contactless payments, and full integration with your online and mobile banking experience.</p>
+            </div>
+            <div class="addon-toggle-row">
+              <span class="addon-toggle-hint">{{ vistaAddons.debitCard ? 'Tap to remove' : 'Tap to add' }}</span>
+              <div class="addon-pill" [class.addon-pill--on]="vistaAddons.debitCard">
+                {{ vistaAddons.debitCard ? 'Selected' : 'Add' }}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary btn-submit" (click)="startVistaSubmission()">Submit Application</button>
+        </div>
+      </div>
+
+      <!-- ── Step 19: Vista Application Status ── -->
+      <div *ngIf="currentStep === 19" class="status-screen">
+
+        <!-- APPROVED -->
+        <div *ngIf="vistaDecision === 'approved'" class="status-approved">
+          <div class="status-icon-wrap">
+            <div class="status-circle status-circle--green">
+              <svg class="status-check" viewBox="0 0 52 52" fill="none">
+                <circle class="status-check__circle" cx="26" cy="26" r="24" stroke="#1a5c2e" stroke-width="3" fill="none"/>
+                <path class="status-check__path" d="M14 26l9 9 15-15" stroke="#1a5c2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <h1 class="status-heading">Congratulations, {{ vistaBasicInfo.firstName }}!</h1>
+          <p class="status-subheading">Your business account application has been approved</p>
+          <div class="status-appno">Application Ref: <strong>#{{ applicationNumber }}</strong></div>
+
+          <div class="status-delivery-card">
+            <div class="status-delivery-icon">🏦</div>
+            <div class="status-delivery-body">
+              <p class="status-delivery-title">Selected Products</p>
+              <p class="status-delivery-address" *ngFor="let p of vistaProducts">
+                <ng-container *ngIf="vistaSelectedProducts[p.id]">✓ {{ p.label }}</ng-container>
+              </p>
+              <p class="status-delivery-eta">Your account will be ready within <strong>1 – 2 business days</strong></p>
+            </div>
+          </div>
+
+          <div class="status-steps-row">
+            <div class="status-step-chip">
+              <span class="chip-icon">✉️</span>
+              <span>Confirmation sent to {{ vistaBasicInfo.email }}</span>
+            </div>
+            <div class="status-step-chip">
+              <span class="chip-icon">📱</span>
+              <span>Enroll in online banking to access your account</span>
+            </div>
+            <div class="status-step-chip">
+              <span class="chip-icon">🔔</span>
+              <span>A Citizens Bank advisor will contact you within 24 hours</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DECLINED -->
+        <div *ngIf="vistaDecision === 'declined'" class="status-declined">
+          <div class="status-icon-wrap">
+            <div class="status-circle status-circle--amber">
+              <svg viewBox="0 0 52 52" fill="none" width="52" height="52">
+                <circle cx="26" cy="26" r="24" stroke="#b45309" stroke-width="3" fill="none"/>
+                <line x1="26" y1="15" x2="26" y2="29" stroke="#b45309" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="26" cy="35" r="1.5" fill="#b45309"/>
+              </svg>
+            </div>
+          </div>
+          <h1 class="status-heading status-heading--amber">We're Sorry, {{ vistaBasicInfo.firstName }}</h1>
+          <p class="status-subheading">We were unable to process your application at this time</p>
+          <div class="status-appno">Application Ref: <strong>#{{ applicationNumber }}</strong></div>
+
+          <div class="status-decline-card">
+            <p class="status-decline-body">Based on the information provided, we are unable to approve your business account application at this time. This is not a final decision.</p>
+            <p class="status-decline-next">A <strong>Citizens Bank representative</strong> will reach out within <strong>2 – 3 business days</strong> at:</p>
+            <div class="status-decline-contacts">
+              <span>📧 {{ vistaBasicInfo.email }}</span>
+            </div>
+          </div>
+
+          <div class="status-steps-row">
+            <div class="status-step-chip status-step-chip--amber">
+              <span class="chip-icon">📋</span>
+              <span>You may reapply after 30 days</span>
+            </div>
+            <div class="status-step-chip status-step-chip--amber">
+              <span class="chip-icon">📞</span>
+              <span>Call us at 1-800-922-9999 for assistance</span>
+            </div>
+            <div class="status-step-chip status-step-chip--amber">
+              <span class="chip-icon">🏦</span>
+              <span>Visit any Citizens Bank branch for support</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-analyzer-link">
+          <button class="btn-analyzer-link" (click)="goToStep(7)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            View uploaded document analysis
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ── Step 13: Vista Basic Information ── -->
+      <div *ngIf="currentStep === 13">
+        <div class="step-header">
+          <h1 class="step-title">Basic Information</h1>
+          <p class="step-subtitle">Let's start with the basics — all fields are pre-filled for review</p>
+        </div>
+
+        <!-- Section 1: Primary Applicant Details -->
+        <div class="form-card">
+          <div class="form-section-title">Section 1 — Primary Applicant Details</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>First Name</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.firstName" />
+            </div>
+            <div class="form-field">
+              <label>Last Name</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.lastName" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field form-field--wide">
+              <label>Personal Email Address</label>
+              <input type="email" [(ngModel)]="vistaBasicInfo.email" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Business Address -->
+        <div class="form-card">
+          <div class="form-section-title">Section 2 — Business Address</div>
+          <div class="form-row">
+            <div class="form-field form-field--wide">
+              <label>Address Line 1</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.addressLine1" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field form-field--wide">
+              <label>Address Line 2</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.addressLine2" placeholder="Suite, floor, unit (optional)" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>City</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.city" />
+            </div>
+            <div class="form-field">
+              <label>State</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.state" maxlength="2" />
+            </div>
+            <div class="form-field">
+              <label>Zipcode</label>
+              <input type="text" [(ngModel)]="vistaBasicInfo.zipcode" maxlength="5" />
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()">Continue</button>
+        </div>
+      </div>
 
       <!-- ── Step 1: Business Information ── -->
       <div *ngIf="currentStep === 1">
@@ -162,8 +832,152 @@
         </div>
       </div>
 
+      <!-- ── Step 8: KYC Details (Relay) ── -->
+      <div *ngIf="currentStep === 8">
+        <div class="step-header">
+          <h1 class="step-title">KYC Details</h1>
+          <p class="step-subtitle">Know Your Customer — identity and compliance information</p>
+        </div>
+
+        <!-- Identity Verification -->
+        <div class="form-card">
+          <div class="form-section-title">Identity Verification</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Government ID Type</label>
+              <select [(ngModel)]="step8.idType">
+                <option *ngFor="let t of idTypes" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>ID Number</label>
+              <input type="text" [(ngModel)]="step8.idNumber" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Issuing State</label>
+              <input type="text" [(ngModel)]="step8.issuingState" maxlength="2" />
+            </div>
+            <div class="form-field">
+              <label>ID Expiration Date</label>
+              <input type="date" [(ngModel)]="step8.idExpiry" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax Information -->
+        <div class="form-card">
+          <div class="form-section-title">Tax Information</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Full Social Security Number</label>
+              <input type="text" [(ngModel)]="step8.fullSsn" placeholder="XXX-XX-XXXX" />
+            </div>
+            <div class="form-field">
+              <label>Employer Identification Number (EIN)</label>
+              <input type="text" [(ngModel)]="step8.ein" placeholder="XX-XXXXXXX" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Citizenship & Residency -->
+        <div class="form-card">
+          <div class="form-section-title">Citizenship &amp; Residency</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Citizenship Status</label>
+              <select [(ngModel)]="step8.citizenshipStatus">
+                <option *ngFor="let s of citizenshipStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Country of Citizenship</label>
+              <input type="text" [(ngModel)]="step8.countryOfCitizenship" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Country of Birth</label>
+              <input type="text" [(ngModel)]="step8.countryOfBirth" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Employment & Income -->
+        <div class="form-card">
+          <div class="form-section-title">Employment &amp; Income</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Employment Status</label>
+              <select [(ngModel)]="step8.employmentStatus">
+                <option *ngFor="let s of employmentStatuses" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Employer / Business Name</label>
+              <input type="text" [(ngModel)]="step8.employerName" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Occupation / Job Title</label>
+              <input type="text" [(ngModel)]="step8.occupation" />
+            </div>
+            <div class="form-field">
+              <label>Annual Gross Income</label>
+              <select [(ngModel)]="step8.annualIncome">
+                <option *ngFor="let b of incomeBrackets" [value]="b">{{ b }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Primary Source of Funds</label>
+              <select [(ngModel)]="step8.sourceOfFunds">
+                <option *ngFor="let f of fundSources" [value]="f">{{ f }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compliance -->
+        <div class="form-card">
+          <div class="form-section-title">Regulatory &amp; Compliance</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Politically Exposed Person (PEP)?</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="pep" value="yes" [(ngModel)]="step8.isPep" /> Yes</label>
+                <label class="radio-label"><input type="radio" name="pep" value="no"  [(ngModel)]="step8.isPep" /> No</label>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Subject to Backup Withholding?</label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="bw" value="yes" [(ngModel)]="step8.backupWithholding" /> Yes</label>
+                <label class="radio-label"><input type="radio" name="bw" value="no"  [(ngModel)]="step8.backupWithholding" /> No</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>FATCA Status</label>
+              <select [(ngModel)]="step8.fatcaStatus">
+                <option *ngFor="let f of fatcaStatuses" [value]="f">{{ f }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()">Continue</button>
+        </div>
+      </div>
+
       <!-- ── Step 3: Terms and Conditions ── -->
-      <div *ngIf="currentStep === 3">
+      <div *ngIf="currentStep === 3 && useCase !== 'relay'">
         <div class="step-header">
           <h1 class="step-title">Terms and Conditions</h1>
           <p class="step-subtitle">Please review and accept the terms before proceeding</p>
@@ -212,7 +1026,7 @@
               <div class="doc-col-header">Document Type</div>
               <div class="doc-col-body">
                 <select class="doc-select" [(ngModel)]="documentType">
-                  <option *ngFor="let opt of documentTypes" [value]="opt.value">{{ opt.label }}</option>
+                  <option *ngFor="let opt of activeDocumentTypes" [value]="opt.value">{{ opt.label }}</option>
                 </select>
               </div>
             </div>
@@ -248,7 +1062,8 @@
 
         <div class="step-actions">
           <button class="btn-secondary" (click)="prevStep()">Back</button>
-          <button class="btn-primary" (click)="nextStep()">Continue</button>
+          <button *ngIf="useCase === 'relay'" class="btn-primary" (click)="continueFromDocUpload()">Continue</button>
+          <button *ngIf="useCase !== 'relay'" class="btn-primary" (click)="nextStep()">Continue</button>
         </div>
       </div>
 
@@ -405,7 +1220,7 @@
         </div>
 
         <!-- Document Upload -->
-        <div class="review-card">
+        <div class="review-card" *ngIf="useCase !== 'relay'">
           <div class="review-card-header">
             <span>Document Upload</span>
             <button class="review-edit-btn" (click)="goToStep(4)">
@@ -477,8 +1292,226 @@
 
         <div class="step-actions">
           <button class="btn-secondary" (click)="prevStep()">Back</button>
-          <button class="btn-primary btn-submit" (click)="submitApplication()">Submit</button>
+          <button *ngIf="useCase === 'relay'" class="btn-primary btn-submit" (click)="startRelaySubmission()">Submit</button>
+          <button *ngIf="useCase !== 'relay'" class="btn-primary btn-submit" (click)="submitApplication()">Submit</button>
         </div>
+      </div>
+
+      <!-- ── Step 9: Disclosure Acceptance (Relay) ── -->
+      <div *ngIf="currentStep === 9">
+        <div class="step-header">
+          <h1 class="step-title">Disclosure Acceptance</h1>
+          <p class="step-subtitle">
+            Application <strong>#{{ applicationNumber }}</strong> — please review and accept all disclosures to continue
+          </p>
+        </div>
+
+        <div class="form-card">
+          <p class="disclosure-intro">Click each disclosure to read the full document before accepting.</p>
+          <div class="disclosure-list">
+            <div class="disclosure-item" *ngFor="let d of disclosures" (click)="openDisclosure(d)">
+              <div class="disclosure-item-icon">&#128196;</div>
+              <div class="disclosure-item-text">
+                <span class="disclosure-item-title">{{ d.title }}</span>
+                <span class="disclosure-item-hint">Click to read</span>
+              </div>
+              <div class="disclosure-item-arrow">&#8250;</div>
+            </div>
+          </div>
+
+          <div class="disclosure-agree-row">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="disclosureAgreed" />
+              <span>I have read and agree to all disclosures listed above</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()">Continue</button>
+        </div>
+      </div>
+
+      <!-- ── Step 10: Card Selection (Relay) ── -->
+      <div *ngIf="currentStep === 10">
+        <div class="step-header">
+          <h1 class="step-title">Choose Your Card</h1>
+          <p class="step-subtitle">Select the credit card that best fits your business needs</p>
+        </div>
+
+        <div class="card-selection-grid">
+
+          <!-- Business Everyday Points -->
+          <div class="card-option" [class.card-option--selected]="selectedCard === 'points'" (click)="selectedCard = 'points'">
+            <div class="card-option-selected-badge" *ngIf="selectedCard === 'points'">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="8" fill="#1a5c2e"/>
+                <path d="M4 8l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Selected
+            </div>
+            <img class="card-image" src="assets/card-points.svg" alt="Business Everyday Points Credit Card" />
+            <div class="card-info">
+              <h3 class="card-name">Business Everyday Points Credit Card</h3>
+              <p class="card-tagline">Earn points on every purchase — redeem for travel, merchandise, or statement credits.</p>
+              <ul class="card-perks">
+                <li>3x points on business purchases</li>
+                <li>1.5x points on all other spend</li>
+                <li>No annual fee first year</li>
+                <li>25,000 bonus points on first $3,000 spend</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Business Everyday Rewards -->
+          <div class="card-option" [class.card-option--selected]="selectedCard === 'rewards'" (click)="selectedCard = 'rewards'">
+            <div class="card-option-selected-badge" *ngIf="selectedCard === 'rewards'">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="8" fill="#1a5c2e"/>
+                <path d="M4 8l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Selected
+            </div>
+            <img class="card-image" src="assets/card-rewards.svg" alt="Business Everyday Rewards Credit Card" />
+            <div class="card-info">
+              <h3 class="card-name">Business Everyday Rewards Credit Card</h3>
+              <p class="card-tagline">Unlimited cash back on business spending — simple, straightforward rewards.</p>
+              <ul class="card-perks">
+                <li>2% cash back on all purchases</li>
+                <li>No category restrictions</li>
+                <li>$200 cash back welcome bonus</li>
+                <li>Free employee cards with spending controls</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="step-actions">
+          <button class="btn-secondary" (click)="prevStep()">Back</button>
+          <button class="btn-primary" (click)="nextStep()">Continue</button>
+        </div>
+      </div>
+
+      <!-- ── Step 11: Application Status (Relay) ── -->
+      <div *ngIf="currentStep === 11" class="status-screen">
+
+        <!-- ── APPROVED ── -->
+        <div *ngIf="cardDecision === 'approved'" class="status-approved">
+          <div class="status-icon-wrap">
+            <div class="status-circle status-circle--green">
+              <svg class="status-check" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle class="status-check__circle" cx="26" cy="26" r="24" stroke="#1a5c2e" stroke-width="3" fill="none"/>
+                <path class="status-check__path" d="M14 26l9 9 15-15" stroke="#1a5c2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <h1 class="status-heading">Congratulations, {{ step2.firstName }}!</h1>
+          <p class="status-subheading">Your credit card application has been approved</p>
+          <div class="status-appno">Application Ref: <strong>#{{ applicationNumber }}</strong></div>
+
+          <div class="status-card-preview">
+            <img
+              [src]="selectedCard === 'rewards' ? 'assets/card-rewards.svg' : 'assets/card-points.svg'"
+              [alt]="selectedCard === 'rewards' ? 'Business Everyday Rewards Credit Card' : 'Business Everyday Points Credit Card'"
+              class="status-card-img"
+            />
+            <p class="status-card-name">
+              {{ selectedCard === 'rewards' ? 'Business Everyday Rewards Credit Card' : 'Business Everyday Points Credit Card' }}
+            </p>
+          </div>
+
+          <div class="status-delivery-card">
+            <div class="status-delivery-icon">📦</div>
+            <div class="status-delivery-body">
+              <p class="status-delivery-title">Your card will be dispatched to</p>
+              <p class="status-delivery-address">
+                {{ step2.firstName }} {{ step2.lastName }}<br/>
+                {{ step2.address }}<br/>
+                {{ step2.city }}, {{ step2.state }} {{ step2.zip }}
+              </p>
+              <p class="status-delivery-eta">Estimated delivery: <strong>5 – 7 business days</strong></p>
+            </div>
+          </div>
+
+          <div class="status-steps-row">
+            <div class="status-step-chip">
+              <span class="chip-icon">✉️</span>
+              <span>Confirmation email sent to {{ step2.email }}</span>
+            </div>
+            <div class="status-step-chip">
+              <span class="chip-icon">🔔</span>
+              <span>You'll receive an SMS when your card ships</span>
+            </div>
+            <div class="status-step-chip">
+              <span class="chip-icon">🔒</span>
+              <span>Activate your card via Online Banking or our app</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── DECLINED ── -->
+        <div *ngIf="cardDecision === 'declined'" class="status-declined">
+          <div class="status-icon-wrap">
+            <div class="status-circle status-circle--amber">
+              <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+                <circle cx="26" cy="26" r="24" stroke="#b45309" stroke-width="3" fill="none"/>
+                <line x1="26" y1="15" x2="26" y2="29" stroke="#b45309" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="26" cy="35" r="1.5" fill="#b45309"/>
+              </svg>
+            </div>
+          </div>
+
+          <h1 class="status-heading status-heading--amber">We're Sorry, {{ step2.firstName }}</h1>
+          <p class="status-subheading">We were unable to process your application at this time</p>
+          <div class="status-appno">Application Ref: <strong>#{{ applicationNumber }}</strong></div>
+
+          <div class="status-decline-card">
+            <p class="status-decline-body">
+              Based on the information and documents provided, we are unable to approve your credit card application at this time.
+              This decision is not a reflection of your creditworthiness overall.
+            </p>
+            <p class="status-decline-next">
+              A <strong>Citizens Bank representative</strong> will review your application and contact you within
+              <strong>2 – 3 business days</strong> at:
+            </p>
+            <div class="status-decline-contacts">
+              <span>📧 {{ step2.email }}</span>
+              <span>📞 {{ step2.phone }}</span>
+            </div>
+          </div>
+
+          <div class="status-steps-row">
+            <div class="status-step-chip status-step-chip--amber">
+              <span class="chip-icon">📋</span>
+              <span>You may reapply after 30 days</span>
+            </div>
+            <div class="status-step-chip status-step-chip--amber">
+              <span class="chip-icon">📞</span>
+              <span>Call us at 1-800-922-9999 for assistance</span>
+            </div>
+            <div class="status-step-chip status-step-chip--amber">
+              <span class="chip-icon">🏦</span>
+              <span>Visit any Citizens Bank branch for support</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-analyzer-link">
+          <button class="btn-analyzer-link" (click)="goToStep(7)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            View uploaded document analysis
+          </button>
+        </div>
+
       </div>
 
       <!-- ── Step 7: Document Analyzer ── -->

@@ -88,20 +88,56 @@ export class DocumentLlmEc2 {
     });
   }
 
+  private extractKV(node: any, result: { key: string; value: string }[], parentKey = ''): void {
+    if (node === null || node === undefined) return;
+
+    if (typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') {
+      if (parentKey) result.push({ key: parentKey, value: String(node) });
+      return;
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach((item, i) => {
+        if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+          if ('key' in item && 'value' in item) {
+            this.extractKV(item.value, result, item.key);
+          } else {
+            this.extractKV(item, result, parentKey);
+          }
+        } else {
+          this.extractKV(item, result, parentKey || String(i));
+        }
+      });
+      return;
+    }
+
+    if (typeof node === 'object') {
+      for (const [k, v] of Object.entries(node)) {
+        const compositeKey = parentKey ? `${parentKey} › ${k}` : k;
+        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+          result.push({ key: compositeKey, value: String(v) });
+        } else {
+          this.extractKV(v, result, compositeKey);
+        }
+      }
+    }
+  }
+
   private parseEc2Response(res: any): Ec2Result {
     const textEntry   = res.text_extract?.[0];
     const classEntry  = res.classification_results?.[0];
     const nerEntry    = res.ner_results?.[0];
-    const structured  = res.strucured_data_extraction_results ?? [];
+    const rawStructured = res.strucured_data_extraction_results ?? [];
+
+    const structuredData: { key: string; value: string }[] = [];
+    this.extractKV(rawStructured, structuredData);
 
     return {
       filename:           textEntry?.filename ?? '',
       docType:            textEntry?.doc_type ?? null,
       extractedText:      textEntry?.text ?? '',
       classificationText: classEntry?.text ?? '',
-      structuredData:     structured.map((item: any) =>
-        Object.entries(item).map(([k, v]) => ({ key: k, value: String(v ?? '') }))
-      ).flat(),
+      structuredData,
       nerEntities: (nerEntry?.ner_entities ?? []).map((e: any) => ({
         text:  e.text,
         label: e.label,

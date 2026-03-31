@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" width="480" height="300">
+  <defs>
+    <linearGradient id="cardGradR" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1b00;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7a4f10;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3d2200;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="chipGR" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4af37"/>
+      <stop offset="100%" style="stop-color:#f5d76e"/>
+    </linearGradient>
+    <filter id="shadowR">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Card body -->
+  <rect width="480" height="300" rx="18" ry="18" fill="url(#cardGradR)" filter="url(#shadowR)"/>
+
+  <!-- Gold shimmer overlay -->
+  <ellipse cx="380" cy="80" rx="220" ry="150" fill="rgba(212,175,55,0.08)"/>
+  <ellipse cx="80" cy="240" rx="160" ry="100" fill="rgba(212,175,55,0.05)"/>
+
+  <!-- Horizontal stripe -->
+  <rect y="100" width="480" height="50" fill="rgba(255,255,255,0.03)"/>
+
+  <!-- Gold top border accent -->
+  <rect width="480" height="4" rx="0" fill="#d4af37" opacity="0.7"/>
+
+  <!-- EMV Chip -->
+  <rect x="36" y="100" width="52" height="40" rx="6" fill="url(#chipGR)"/>
+  <line x1="36" y1="115" x2="88" y2="115" stroke="#b8972c" stroke-width="1"/>
+  <line x1="36" y1="125" x2="88" y2="125" stroke="#b8972c" stroke-width="1"/>
+  <line x1="36" y1="135" x2="88" y2="135" stroke="#b8972c" stroke-width="1"/>
+  <line x1="55" y1="100" x2="55" y2="140" stroke="#b8972c" stroke-width="1"/>
+  <line x1="68" y1="100" x2="68" y2="140" stroke="#b8972c" stroke-width="1"/>
+
+  <!-- Contactless symbol -->
+  <path d="M108 117 Q115 120 108 123" fill="none" stroke="rgba(212,175,55,0.8)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M113 112 Q124 120 113 128" fill="none" stroke="rgba(212,175,55,0.8)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M118 107 Q133 120 118 133" fill="none" stroke="rgba(212,175,55,0.5)" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Card number -->
+  <text x="36" y="188" font-family="'Courier New', monospace" font-size="22" fill="rgba(212,175,55,0.95)" letter-spacing="3">4821  ••••  ••••  7364</text>
+
+  <!-- Expiry -->
+  <text x="36" y="224" font-family="Arial, sans-serif" font-size="10" fill="rgba(212,175,55,0.55)" letter-spacing="1">VALID THRU</text>
+  <text x="36" y="240" font-family="'Courier New', monospace" font-size="16" fill="rgba(212,175,55,0.95)" letter-spacing="2">03/28</text>
+
+  <!-- Cardholder name -->
+  <text x="36" y="272" font-family="Arial, sans-serif" font-size="14" fill="rgba(212,175,55,0.95)" letter-spacing="1.5" font-weight="600">JOHN MITCHELL</text>
+
+  <!-- Rewards ribbon top-right -->
+  <circle cx="420" cy="54" r="34" fill="rgba(212,175,55,0.15)"/>
+  <circle cx="420" cy="54" r="30" fill="none" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+  <text x="420" y="47" font-size="16" text-anchor="middle" fill="#f5d76e">🎁</text>
+  <text x="420" y="64" font-size="9" text-anchor="middle" fill="rgba(212,175,55,0.9)" font-family="Arial" font-weight="700" letter-spacing="0.5">REWARDS</text>
+
+  <!-- Network logo -->
+  <text x="396" y="272" font-family="Arial, sans-serif" font-size="26" font-weight="900" font-style="italic" fill="rgba(212,175,55,0.9)" letter-spacing="-1">VISA</text>
+
+  <!-- Card name top-left -->
+  <text x="36" y="46" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="rgba(255,255,255,0.95)" letter-spacing="0.5">Citizens Bank</text>
+  <text x="36" y="65" font-family="Arial, sans-serif" font-size="10" fill="rgba(212,175,55,0.75)" letter-spacing="0.3">Business Everyday Rewards</text>
+</svg>
