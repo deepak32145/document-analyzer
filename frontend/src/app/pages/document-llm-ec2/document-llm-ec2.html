@@ -118,10 +118,12 @@
           <table class="llm-table">
             <thead><tr><th>Field</th><th>Value</th></tr></thead>
             <tbody>
-              <tr *ngFor="let row of ec2Result.structuredData">
-                <td class="llm-key">{{ row.key }}</td>
-                <td class="llm-val">{{ row.value }}</td>
-              </tr>
+              <ng-container *ngFor="let row of ec2Result.structuredData">
+                <tr *ngIf="row.value?.trim()">
+                  <td class="llm-key">{{ row.key.includes(' › ') ? row.key.split(' › ').pop() : row.key }}</td>
+                  <td class="llm-val">{{ row.value }}</td>
+                </tr>
+              </ng-container>
             </tbody>
           </table>
         </div>

@@ -1595,10 +1595,12 @@
                   <table class="ec2-table">
                     <thead><tr><th>Field</th><th>Value</th></tr></thead>
                     <tbody>
-                      <tr *ngFor="let row of ec2Result.structuredData">
-                        <td class="ec2-key">{{ row.key }}</td>
+                      <ng-container *ngFor="let row of ec2Result.structuredData">
+                        <tr *ngIf="row.value?.trim()">
+                        <td class="ec2-key">{{ row.key.includes(' › ') ? row.key.split(' › ').pop() : row.key }}</td>
                         <td class="ec2-val">{{ row.value }}</td>
-                      </tr>
+                        </tr>
+                      </ng-container>
                     </tbody>
                   </table>
                 </div>

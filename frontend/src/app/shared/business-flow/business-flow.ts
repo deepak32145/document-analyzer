@@ -450,17 +450,23 @@ export class BusinessFlow implements OnInit {
 
     this.http.post<any>('http://localhost:3000/api/upload-ec2', formData).subscribe({
       next: (res) => {
-        this.uploading     = false;
-        this.uploadBtnText = 'Upload Document';
-        this.uploadedFile  = file;
-        this.ec2Result     = this.parseEc2Response(res);
+        this.uploading          = false;
+        this.uploadBtnText      = 'Upload Document';
+        this.uploadedFile       = file;
+        this.ec2Result          = this.parseEc2Response(res);
+        this.documentRawUrl     = URL.createObjectURL(file);
+        this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+        this.isImage            = file.type.startsWith('image/');
         this.snackbar.success(`"${file.name}" uploaded successfully`);
       },
       error: () => {
-        this.uploading     = false;
-        this.uploadBtnText = 'Upload Document';
-        this.uploadedFile  = file;
-        this.ec2Result     = null;   // no data — decision will use random fallback
+        this.uploading          = false;
+        this.uploadBtnText      = 'Upload Document';
+        this.uploadedFile       = file;
+        this.ec2Result          = null;
+        this.documentRawUrl     = URL.createObjectURL(file);
+        this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+        this.isImage            = file.type.startsWith('image/');
         this.snackbar.info('Analysis service unavailable — proceeding with fallback review.');
       }
     });
