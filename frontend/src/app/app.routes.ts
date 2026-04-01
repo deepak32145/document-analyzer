@@ -3,6 +3,7 @@ import { Home } from './pages/home/home';
 import { Shell } from './layout/shell/shell';
 import { DocumentIntelligence } from './pages/document-intelligence/document-intelligence';
 import { DocumentLlmEc2 } from './pages/document-llm-ec2/document-llm-ec2';
+import { DocumentAnthropic } from './pages/document-anthropic/document-anthropic';
 import { Relay } from './pages/relay/relay';
 import { Vista } from './pages/vista/vista';
 
@@ -14,6 +15,7 @@ export const routes: Routes = [
     children: [
       { path: 'document-intelligence', component: DocumentIntelligence },
       { path: 'document-llm-ec2', component: DocumentLlmEc2 },
+      { path: 'document-anthropic', component: DocumentAnthropic },
     ]
   },
   { path: 'relay', component: Relay },

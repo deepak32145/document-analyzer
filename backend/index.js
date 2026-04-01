@@ -5,8 +5,9 @@ const morgan   = require('morgan');
 const path     = require('path');
 const fs       = require('fs');
 const http     = require('http');
-const { analyzeDocument } = require('./analyzer');
-const { analyzeLlm }      = require('./llm-analyzer');
+const { analyzeDocument }  = require('./analyzer');
+const { analyzeLlm }       = require('./llm-analyzer');
+const { streamAnalysis }   = require('./anthropic-analyzer');
 
 const app  = express();
 const PORT = 3000;
@@ -144,6 +145,28 @@ app.post('/api/upload-llm', upload.single('document'), async (req, res) => {
   }
 });
 
+// ── POST /api/analyze-anthropic  (Claude streaming analysis) ─
+app.post('/api/analyze-anthropic', uploadMemory.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received.' });
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  try {
+    for await (const text of streamAnalysis(req.file.buffer, req.file.mimetype)) {
+      res.write(`data: ${JSON.stringify({ text })}\n\n`);
+    }
+    res.write('data: [DONE]\n\n');
+  } catch (err) {
+    console.error('[anthropic error]', err.message);
+    res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+  } finally {
+    res.end();
+  }
+});
+
 // ── 404 fallback ─────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
@@ -159,6 +182,7 @@ app.use((err, _req, res, _next) => {
 // ── Start ────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n  Backend running at http://localhost:${PORT}`);
-  console.log(`  POST /api/upload      — rule-based analysis (business flows)`);
-  console.log(`  POST /api/upload-llm  — NLP analysis (document intelligence)\n`);
+  console.log(`  POST /api/upload               — rule-based analysis (business flows)`);
+  console.log(`  POST /api/upload-llm           — NLP analysis (document intelligence)`);
+  console.log(`  POST /api/analyze-anthropic    — Claude streaming analysis\n`);
 });
