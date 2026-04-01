@@ -360,19 +360,35 @@ export class BusinessFlow implements OnInit {
   }
 
   private evaluateCardDecision(): 'approved' | 'declined' {
+    const coinFlip = (): 'approved' | 'declined' => Math.random() > 0.5 ? 'approved' : 'declined';
+
     if (!this.ec2Result || this.ec2Result.structuredData.length === 0) {
-      return Math.random() > 0.5 ? 'approved' : 'declined';
+      return coinFlip();
     }
 
-    // Collect all positive balance values (transaction + closing balances)
+    // Vista: check expiry date from structured data
+    if (this.useCase === 'vista') {
+      const expiryEntry = this.ec2Result.structuredData.find(kv =>
+        /expir(y|ation|es?)/i.test(kv.key) || /valid\s*(through|until|to)/i.test(kv.key)
+      );
+
+      if (expiryEntry) {
+        const parsed = new Date(expiryEntry.value);
+        if (!isNaN(parsed.getTime())) {
+          return parsed > new Date() ? 'approved' : 'declined';
+        }
+      }
+
+      return coinFlip();
+    }
+
+    // Relay: check average balance
     const balances = this.ec2Result.structuredData
       .filter(kv => /balance/i.test(kv.key) && !/opening/i.test(kv.key))
       .map(kv => parseFloat(kv.value))
       .filter(v => !isNaN(v) && v > 0);
 
-    if (balances.length === 0) {
-      return Math.random() > 0.5 ? 'approved' : 'declined';
-    }
+    if (balances.length === 0) return coinFlip();
 
     const avg = balances.reduce((sum, v) => sum + v, 0) / balances.length;
     return avg > 5000 ? 'approved' : 'declined';
