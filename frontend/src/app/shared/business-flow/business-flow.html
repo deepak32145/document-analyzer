@@ -1060,6 +1060,51 @@
           </div>
         </div>
 
+        <!-- Processing Pipeline (shown inline after upload) -->
+        <div class="pipeline-card" [class.pipeline-card--done]="processingStatus === 'done'" *ngIf="processingStatus !== 'idle'">
+          <div class="pipeline-card-header">
+            <div class="pipeline-card-title">
+              <div class="pipeline-spinner" *ngIf="processingStatus === 'running'"></div>
+              <svg *ngIf="processingStatus === 'done'" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="8" fill="#1a5c2e"/>
+                <path d="M4.5 8l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>{{ processingStatus === 'done' ? 'Analysis Complete' : 'Processing Document…' }}</span>
+            </div>
+            <span class="pipeline-doc-badge">{{ useCase === 'relay' ? 'Bank Statement' : 'Driving Licence' }}</span>
+          </div>
+          <div class="pipeline-steps" [class.pipeline-steps--collapsed]="processingStatus === 'done'">
+            <div class="pipeline-step"
+                 *ngFor="let step of activePipeline; let i = index"
+                 [class.pipeline-step--done]="processingStepsDone[i]"
+                 [class.pipeline-step--active]="processingCurrentStep === i && !processingStepsDone[i]"
+                 [class.pipeline-step--pending]="processingCurrentStep < i">
+              <div class="ps-icon">
+                <svg *ngIf="processingStepsDone[i]" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="7" cy="7" r="7" fill="#1a5c2e"/>
+                  <path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <div class="ps-spinner-sm" *ngIf="processingCurrentStep === i && !processingStepsDone[i]"></div>
+                <div class="ps-dot" *ngIf="processingCurrentStep < i"></div>
+              </div>
+              <div class="ps-info">
+                <span class="ps-label">{{ step.label }}</span>
+                <span class="ps-detail">{{ step.detail }}</span>
+              </div>
+              <span class="ps-time" *ngIf="processingStepsDone[i]">
+                {{ i === activePipeline.length - 1 ? (apiCallDuration ?? step.time) : step.time }}
+              </span>
+              <div class="ps-bar-track">
+                <div class="ps-bar"
+                     [class.ps-bar--done]="processingStepsDone[i]"
+                     [class.ps-bar--pulse]="processingCurrentStep === i && !processingStepsDone[i] && i === activePipeline.length - 1"
+                     [style.width.%]="processingStepsDone[i] ? 100 : (processingCurrentStep === i ? processingStepProgress : 0)">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="step-actions">
           <button class="btn-secondary" (click)="prevStep()">Back</button>
           <button *ngIf="useCase === 'relay'" class="btn-primary" (click)="continueFromDocUpload()">Continue</button>
@@ -1521,6 +1566,57 @@
           <p class="step-subtitle">Reviewing uploaded document for <strong>{{ businessName }}</strong></p>
         </div>
 
+        <!-- ── Processing Pipeline Status ── -->
+        <div class="pipeline-card" [class.pipeline-card--done]="processingStatus === 'done'" *ngIf="processingStatus !== 'idle'">
+          <div class="pipeline-card-header">
+            <div class="pipeline-card-title">
+              <div class="pipeline-spinner" *ngIf="processingStatus === 'running'"></div>
+              <svg *ngIf="processingStatus === 'done'" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="8" fill="#1a5c2e"/>
+                <path d="M4.5 8l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>{{ processingStatus === 'done' ? 'Analysis Complete' : 'Processing Document…' }}</span>
+            </div>
+            <span class="pipeline-doc-badge">{{ useCase === 'relay' ? 'Bank Statement' : 'Driving Licence' }}</span>
+          </div>
+
+          <div class="pipeline-steps" [class.pipeline-steps--collapsed]="processingStatus === 'done'">
+            <div class="pipeline-step"
+                 *ngFor="let step of activePipeline; let i = index"
+                 [class.pipeline-step--done]="processingStepsDone[i]"
+                 [class.pipeline-step--active]="processingCurrentStep === i && !processingStepsDone[i]"
+                 [class.pipeline-step--pending]="processingCurrentStep < i">
+
+              <div class="ps-icon">
+                <svg *ngIf="processingStepsDone[i]" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="7" cy="7" r="7" fill="#1a5c2e"/>
+                  <path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <div class="ps-spinner-sm" *ngIf="processingCurrentStep === i && !processingStepsDone[i]"></div>
+                <div class="ps-dot" *ngIf="processingCurrentStep < i"></div>
+              </div>
+
+              <div class="ps-info">
+                <span class="ps-label">{{ step.label }}</span>
+                <span class="ps-detail">{{ step.detail }}</span>
+              </div>
+
+              <span class="ps-time" *ngIf="processingStepsDone[i]">
+                {{ i === activePipeline.length - 1 ? (apiCallDuration ?? step.time) : step.time }}
+              </span>
+
+              <div class="ps-bar-track">
+                <div class="ps-bar"
+                     [class.ps-bar--done]="processingStepsDone[i]"
+                     [class.ps-bar--pulse]="processingCurrentStep === i && !processingStepsDone[i] && i === activePipeline.length - 1"
+                     [style.width.%]="processingStepsDone[i] ? 100 : (processingCurrentStep === i ? processingStepProgress : 0)">
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         <!-- Empty state -->
         <div class="analyzer-empty" *ngIf="!documentObjectUrl">
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
@@ -1533,7 +1629,7 @@
         </div>
 
         <!-- Split view: PDF left | Analysis right -->
-        <div class="analyzer-split" *ngIf="documentObjectUrl">
+        <div class="analyzer-split" *ngIf="documentObjectUrl && processingStatus === 'done'">
 
           <!-- Left: PDF / image viewer -->
           <div class="analyzer-pane analyzer-pane--pdf">

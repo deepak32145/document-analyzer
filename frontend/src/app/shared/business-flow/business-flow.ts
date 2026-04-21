@@ -316,7 +316,9 @@ export class BusinessFlow implements OnInit {
     return order.indexOf(stepId) < order.indexOf(this.currentStep);
   }
 
-  goToStep(step: number) { this.currentStep = step; }
+  goToStep(step: number) {
+    this.currentStep = step;
+  }
 
   nextStep() {
     const order = this.stepOrder;
@@ -448,6 +450,9 @@ export class BusinessFlow implements OnInit {
   }
 
   // ── Upload ─────────────────────────────────────────────
+  private apiCallStartTime = 0;
+  apiCallDuration: string | null = null;
+
   triggerUpload() {
     this.fileInput.nativeElement.value = '';
     this.fileInput.nativeElement.click();
@@ -457,8 +462,10 @@ export class BusinessFlow implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
-    this.uploading     = true;
-    this.uploadBtnText = 'Uploading...';
+    this.uploading         = true;
+    this.uploadBtnText     = 'Uploading...';
+    this.apiCallStartTime  = Date.now();
+    this.apiCallDuration   = null;
 
     const formData = new FormData();
     formData.append('files', file);
@@ -468,6 +475,7 @@ export class BusinessFlow implements OnInit {
       next: (res) => {
         this.uploading          = false;
         this.uploadBtnText      = 'Upload Document';
+        this.apiCallDuration    = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
         this.uploadedFile       = file;
         this.ec2Result          = this.parseEc2Response(res);
         this.documentRawUrl     = URL.createObjectURL(file);
@@ -478,12 +486,14 @@ export class BusinessFlow implements OnInit {
       error: () => {
         this.uploading          = false;
         this.uploadBtnText      = 'Upload Document';
+        this.apiCallDuration    = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
         this.uploadedFile       = file;
         this.ec2Result          = null;
         this.documentRawUrl     = URL.createObjectURL(file);
         this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
         this.isImage            = file.type.startsWith('image/');
         this.snackbar.info('Analysis service unavailable — proceeding with fallback review.');
+        this.startProcessingAnimation();
       }
     });
   }
@@ -552,5 +562,100 @@ export class BusinessFlow implements OnInit {
   viewDocument() {
     if (!this.uploadedFile) return;
     window.open(URL.createObjectURL(this.uploadedFile), '_blank');
+  }
+
+  // ── Processing Pipeline Animation ─────────────────────
+  processingStatus: 'idle' | 'running' | 'done' = 'idle';
+  processingCurrentStep = -1;
+  processingStepsDone: boolean[] = [];
+  processingStepProgress = 0;
+
+  private relayPipeline = [
+    { label: 'Text Extraction',              detail: 'Extracting raw text from document',        time: '~1s'  },
+    { label: 'Embedding Generation',         detail: 'Generating semantic vector embeddings',     time: '~10s' },
+    { label: 'ChromaDB Storage',             detail: 'Persisting embeddings to vector store',     time: '~1s'  },
+    { label: 'Structured Schema Extraction', detail: 'Parsing bank statement fields & schema',    time: '~30s' },
+    { label: 'NER Generation',               detail: 'Identifying named entities in document',    time: '...'  },
+  ];
+
+  private vistaPipeline = [
+    { label: 'Text Extraction',              detail: 'Extracting raw text from document',        time: '~2s'  },
+    { label: 'Embedding Generation',         detail: 'Generating semantic vector embeddings',     time: '~1s'  },
+    { label: 'ChromaDB Storage',             detail: 'Persisting embeddings to vector store',     time: '~1s'  },
+    { label: 'Structured Schema Extraction', detail: 'Parsing driving licence fields & schema',   time: '~3s'  },
+    { label: 'NER Generation',               detail: 'Identifying named entities in document',    time: '...'  },
+  ];
+
+  private relayDemoMs = [600, 1100, 500, 1700, -1];
+  private vistaDemoMs  = [700, 500,  400, 1100, -1];
+
+  get activePipeline() {
+    return this.useCase === 'relay' ? this.relayPipeline : this.vistaPipeline;
+  }
+
+  get activeDemoMs() {
+    return this.useCase === 'relay' ? this.relayDemoMs : this.vistaDemoMs;
+  }
+
+  startProcessingAnimation() {
+    const pipeline = this.activePipeline;
+    this.processingStatus    = 'running';
+    this.processingCurrentStep = 0;
+    this.processingStepsDone = pipeline.map(() => false);
+    this.processingStepProgress = 0;
+    this.runPipelineStep(0);
+  }
+
+  private runPipelineStep(idx: number) {
+    const pipeline = this.activePipeline;
+    if (idx >= pipeline.length) { this.processingStatus = 'done'; return; }
+
+    this.processingCurrentStep  = idx;
+    this.processingStepProgress = 0;
+    const demoMs = this.activeDemoMs[idx];
+    const isLast = idx === pipeline.length - 1;
+
+    if (isLast) {
+      this.runNerStep(idx);
+      return;
+    }
+
+    const tickMs    = 40;
+    const totalTicks = demoMs / tickMs;
+    let tick = 0;
+    const timer = setInterval(() => {
+      tick++;
+      this.processingStepProgress = Math.min(100, (tick / totalTicks) * 100);
+      if (tick >= totalTicks) {
+        clearInterval(timer);
+        this.processingStepsDone[idx] = true;
+        setTimeout(() => this.runPipelineStep(idx + 1), 120);
+      }
+    }, tickMs);
+  }
+
+  private runNerStep(idx: number) {
+    this.processingStepProgress = 0;
+    let progress = 0;
+
+    const slowTimer = setInterval(() => {
+      progress = Math.min(78, progress + 1.2);
+      this.processingStepProgress = progress;
+
+      const apiDone = this.ec2Result !== null || !this.uploading;
+      if (progress >= 78 && apiDone) {
+        clearInterval(slowTimer);
+
+        const fastTimer = setInterval(() => {
+          progress = Math.min(100, progress + 4);
+          this.processingStepProgress = progress;
+          if (progress >= 100) {
+            clearInterval(fastTimer);
+            this.processingStepsDone[idx] = true;
+            setTimeout(() => { this.processingStatus = 'done'; }, 250);
+          }
+        }, 25);
+      }
+    }, 55);
   }
 }
