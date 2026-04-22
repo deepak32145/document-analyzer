@@ -1,8 +1,7 @@
-import { Component, Input, ElementRef, ViewChild, OnInit } from '@angular/core';
+import { Component, Input, ElementRef, ViewChild, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SnackbarService } from '../snackbar';
 import { Ec2Result } from '../../pages/document-llm-ec2/document-llm-ec2';
@@ -281,9 +280,9 @@ export class BusinessFlow implements OnInit {
   accountTypes = ['Business Checking', 'Business Savings', 'Business Money Market'];
 
   constructor(
-    private http: HttpClient,
     private snackbar: SnackbarService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private zone: NgZone
   ) {}
 
   ngOnInit() {
@@ -452,6 +451,7 @@ export class BusinessFlow implements OnInit {
   // ── Upload ─────────────────────────────────────────────
   private apiCallStartTime = 0;
   apiCallDuration: string | null = null;
+  uploadProgress = 0;
 
   triggerUpload() {
     this.fileInput.nativeElement.value = '';
@@ -462,39 +462,79 @@ export class BusinessFlow implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
-    this.uploading         = true;
-    this.uploadBtnText     = 'Uploading...';
-    this.apiCallStartTime  = Date.now();
-    this.apiCallDuration   = null;
+    this.uploading        = true;
+    this.uploadBtnText    = 'Uploading...';
+    this.uploadProgress   = 0;
+    this.apiCallStartTime = Date.now();
+    this.apiCallDuration  = null;
 
     const formData = new FormData();
     formData.append('files', file);
     formData.append('documentType', this.documentType);
 
-    this.http.post<any>('http://localhost:3000/api/upload-ec2', formData).subscribe({
-      next: (res) => {
-        this.uploading          = false;
-        this.uploadBtnText      = 'Upload Document';
-        this.apiCallDuration    = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
-        this.uploadedFile       = file;
-        this.ec2Result          = this.parseEc2Response(res);
-        this.documentRawUrl     = URL.createObjectURL(file);
-        this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-        this.isImage            = file.type.startsWith('image/');
-        this.snackbar.success(`"${file.name}" uploaded successfully`);
-      },
-      error: () => {
-        this.uploading          = false;
-        this.uploadBtnText      = 'Upload Document';
-        this.apiCallDuration    = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
-        this.uploadedFile       = file;
-        this.ec2Result          = null;
-        this.documentRawUrl     = URL.createObjectURL(file);
-        this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-        this.isImage            = file.type.startsWith('image/');
-        this.snackbar.info('Analysis service unavailable — proceeding with fallback review.');
-        this.startProcessingAnimation();
-      }
+    this.zone.run(() => {
+      fetch('http://localhost:3000/api/upload-ec2', { method: 'POST', body: formData })
+        .then(async (response) => {
+          if (!response.ok || !response.body) throw new Error('Upload failed');
+
+          const reader  = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop() ?? '';
+
+            for (const part of parts) {
+              const line = part.trim();
+              if (!line.startsWith('data: ')) continue;
+              const raw = line.slice(6).trim();
+              if (raw === '[DONE]') continue;
+
+              try {
+                const msg = JSON.parse(raw);
+                this.zone.run(() => {
+                  if (msg.type === 'progress') {
+                    this.uploadProgress = msg.pct;
+                  } else if (msg.type === 'done') {
+                    this.uploadProgress     = 100;
+                    this.apiCallDuration    = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
+                    this.uploadedFile       = file;
+                    this.ec2Result          = this.parseEc2Response(msg.data);
+                    this.documentRawUrl     = URL.createObjectURL(file);
+                    this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+                    this.isImage            = file.type.startsWith('image/');
+                    this.snackbar.success(`"${file.name}" uploaded successfully`);
+                  } else if (msg.type === 'error') {
+                    throw new Error(msg.message);
+                  }
+                });
+              } catch { /* ignore parse errors on individual chunks */ }
+            }
+          }
+        })
+        .catch(() => {
+          this.zone.run(() => {
+            this.apiCallDuration   = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
+            this.uploadedFile      = file;
+            this.ec2Result         = null;
+            this.documentRawUrl    = URL.createObjectURL(file);
+            this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+            this.isImage           = file.type.startsWith('image/');
+            this.snackbar.info('Analysis service unavailable — proceeding with fallback review.');
+            this.startProcessingAnimation();
+          });
+        })
+        .finally(() => {
+          this.zone.run(() => {
+            this.uploading     = false;
+            this.uploadBtnText = 'Upload Document';
+          });
+        });
     });
   }
 
