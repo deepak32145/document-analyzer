@@ -451,7 +451,9 @@ export class BusinessFlow implements OnInit {
   // ── Upload ─────────────────────────────────────────────
   private apiCallStartTime = 0;
   apiCallDuration: string | null = null;
-  uploadProgress = 0;
+  uploadProgress    = 0;
+  uploadCurrentStep = '';
+  uploadSteps: { label: string; durationMs: number }[] = [];
 
   triggerUpload() {
     this.fileInput.nativeElement.value = '';
@@ -462,9 +464,12 @@ export class BusinessFlow implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
+
     this.uploading        = true;
-    this.uploadBtnText    = 'Uploading...';
+    this.uploadBtnText    = 'Analysing...';
     this.uploadProgress   = 0;
+    this.uploadCurrentStep = '';
+    this.uploadSteps      = [];
     this.apiCallStartTime = Date.now();
     this.apiCallDuration  = null;
 
@@ -472,70 +477,77 @@ export class BusinessFlow implements OnInit {
     formData.append('files', file);
     formData.append('documentType', this.documentType);
 
-    this.zone.run(() => {
-      fetch('http://localhost:3000/api/upload-ec2', { method: 'POST', body: formData })
-        .then(async (response) => {
-          if (!response.ok || !response.body) throw new Error('Upload failed');
+    let lastEventTime = Date.now();
+    let lastEvent: any = null;
 
-          const reader  = response.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
+    fetch('http://172.16.3.190:80/upload/streams', { method: 'POST', body: formData })
+      .then(async (response) => {
+        if (!response.ok || !response.body) throw new Error('Upload failed');
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+        const reader  = response.body.getReader();
+        const decoder = new TextDecoder();
+        let lineBuffer = '';
 
-            const parts = buffer.split('\n\n');
-            buffer = parts.pop() ?? '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-            for (const part of parts) {
-              const line = part.trim();
-              if (!line.startsWith('data: ')) continue;
-              const raw = line.slice(6).trim();
-              if (raw === '[DONE]') continue;
+          lineBuffer += decoder.decode(value, { stream: true });
+          const lines = lineBuffer.split('\n');
+          lineBuffer  = lines.pop() ?? '';
 
-              try {
-                const msg = JSON.parse(raw);
-                this.zone.run(() => {
-                  if (msg.type === 'progress') {
-                    this.uploadProgress = msg.pct;
-                  } else if (msg.type === 'done') {
-                    this.uploadProgress     = 100;
-                    this.apiCallDuration    = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
-                    this.uploadedFile       = file;
-                    this.ec2Result          = this.parseEc2Response(msg.data);
-                    this.documentRawUrl     = URL.createObjectURL(file);
-                    this.documentObjectUrl  = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-                    this.isImage            = file.type.startsWith('image/');
-                    this.snackbar.success(`"${file.name}" uploaded successfully`);
-                  } else if (msg.type === 'error') {
-                    throw new Error(msg.message);
-                  }
-                });
-              } catch { /* ignore parse errors on individual chunks */ }
-            }
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const msg = JSON.parse(trimmed);
+              const now = Date.now();
+              const durationMs = now - lastEventTime;
+              lastEventTime = now;
+
+              this.zone.run(() => {
+                if (lastEvent) {
+                  this.uploadSteps.push({ label: lastEvent.current_step, durationMs });
+                }
+                this.uploadProgress    = msg.progress ?? this.uploadProgress;
+                this.uploadCurrentStep = msg.current_step ?? '';
+                lastEvent = msg;
+              });
+            } catch { /* skip non-JSON lines */ }
           }
-        })
-        .catch(() => {
-          this.zone.run(() => {
-            this.apiCallDuration   = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
-            this.uploadedFile      = file;
-            this.ec2Result         = null;
-            this.documentRawUrl    = URL.createObjectURL(file);
-            this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-            this.isImage           = file.type.startsWith('image/');
-            this.snackbar.info('Analysis service unavailable — proceeding with fallback review.');
-            this.startProcessingAnimation();
-          });
-        })
-        .finally(() => {
-          this.zone.run(() => {
-            this.uploading     = false;
-            this.uploadBtnText = 'Upload Document';
-          });
+        }
+
+        // Stream ended — finalise with last event data
+        this.zone.run(() => {
+          if (lastEvent) {
+            this.uploadSteps.push({ label: lastEvent.current_step, durationMs: Date.now() - lastEventTime });
+          }
+          this.uploadProgress    = 100;
+          this.apiCallDuration   = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
+          this.uploadedFile      = file;
+          this.ec2Result         = this.parseEc2Response(lastEvent ?? {});
+          this.documentRawUrl    = URL.createObjectURL(file);
+          this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+          this.isImage           = file.type.startsWith('image/');
+          this.uploading         = false;
+          this.uploadBtnText     = 'Upload Document';
+          this.snackbar.success(`"${file.name}" uploaded successfully`);
         });
-    });
+      })
+      .catch(() => {
+        this.zone.run(() => {
+          this.apiCallDuration   = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
+          this.uploadedFile      = file;
+          this.ec2Result         = null;
+          this.documentRawUrl    = URL.createObjectURL(file);
+          this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+          this.isImage           = file.type.startsWith('image/');
+          this.uploading         = false;
+          this.uploadBtnText     = 'Upload Document';
+          this.snackbar.info('Analysis service unavailable — proceeding with fallback review.');
+          this.startProcessingAnimation();
+        });
+      });
   }
 
   private extractKV(node: any, result: { key: string; value: string }[], parentKey = ''): void {
