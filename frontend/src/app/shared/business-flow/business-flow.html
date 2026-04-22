@@ -1034,42 +1034,11 @@
             <!-- Column 2: Upload -->
             <div class="doc-col">
               <div class="doc-col-header">Upload Document</div>
-              <div class="doc-col-body" style="flex-direction:column; align-items:flex-start; gap:12px;">
+              <div class="doc-col-body">
                 <input #fileInput type="file" accept="image/*,application/pdf" style="display:none" (change)="onFileSelected($event)" />
                 <button class="upload-btn" (click)="triggerUpload()" [disabled]="uploading">
                   {{ uploadBtnText }}
                 </button>
-
-                <!-- Real streaming progress -->
-                <div class="stream-progress" *ngIf="uploading || uploadSteps.length > 0">
-
-                  <!-- Bar + percentage -->
-                  <div class="stream-progress__bar-row">
-                    <div class="stream-progress__track">
-                      <div class="stream-progress__fill" [style.width.%]="uploadProgress"></div>
-                    </div>
-                    <span class="stream-progress__pct">{{ uploadProgress }}%</span>
-                  </div>
-
-                  <!-- Current step label -->
-                  <div class="stream-progress__current" *ngIf="uploading && uploadCurrentStep">
-                    <div class="stream-progress__spinner"></div>
-                    <span>{{ uploadCurrentStep }}</span>
-                  </div>
-
-                  <!-- Completed steps with timing -->
-                  <div class="stream-progress__steps" *ngIf="uploadSteps.length > 0">
-                    <div class="stream-progress__step" *ngFor="let s of uploadSteps">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <circle cx="6" cy="6" r="6" fill="#1a5c2e"/>
-                        <path d="M3 6l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                      </svg>
-                      <span class="stream-progress__step-label">{{ s.label }}</span>
-                      <span class="stream-progress__step-time">{{ s.durationMs / 1000 | number:'1.1-1' }}s</span>
-                    </div>
-                  </div>
-
-                </div>
               </div>
             </div>
 
@@ -1091,48 +1060,53 @@
           </div>
         </div>
 
-        <!-- Processing Pipeline (shown inline after upload) -->
-        <div class="pipeline-card" [class.pipeline-card--done]="processingStatus === 'done'" *ngIf="processingStatus !== 'idle'">
+        <!-- Processing Pipeline — powered by real EC2 stream -->
+        <div class="pipeline-card" [class.pipeline-card--done]="!uploading && uploadSteps.length > 0"
+             *ngIf="uploading || uploadSteps.length > 0">
           <div class="pipeline-card-header">
             <div class="pipeline-card-title">
-              <div class="pipeline-spinner" *ngIf="processingStatus === 'running'"></div>
-              <svg *ngIf="processingStatus === 'done'" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <div class="pipeline-spinner" *ngIf="uploading"></div>
+              <svg *ngIf="!uploading && uploadSteps.length > 0" width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="8" fill="#1a5c2e"/>
                 <path d="M4.5 8l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <span>{{ processingStatus === 'done' ? 'Analysis Complete' : 'Processing Document…' }}</span>
+              <span>{{ !uploading && uploadSteps.length > 0 ? 'Analysis Complete' : 'Processing Document…' }}</span>
             </div>
-            <span class="pipeline-doc-badge">{{ useCase === 'relay' ? 'Bank Statement' : 'Driving Licence' }}</span>
+            <span class="pipeline-doc-badge">{{ uploadProgress }}%</span>
           </div>
-          <div class="pipeline-steps" [class.pipeline-steps--collapsed]="processingStatus === 'done'">
-            <div class="pipeline-step"
-                 *ngFor="let step of activePipeline; let i = index"
-                 [class.pipeline-step--done]="processingStepsDone[i]"
-                 [class.pipeline-step--active]="processingCurrentStep === i && !processingStepsDone[i]"
-                 [class.pipeline-step--pending]="processingCurrentStep < i">
+
+          <div class="pipeline-steps">
+
+            <!-- Completed steps from stream -->
+            <div class="pipeline-step pipeline-step--done" *ngFor="let s of uploadSteps">
               <div class="ps-icon">
-                <svg *ngIf="processingStepsDone[i]" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <circle cx="7" cy="7" r="7" fill="#1a5c2e"/>
                   <path d="M3.5 7l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
                 </svg>
-                <div class="ps-spinner-sm" *ngIf="processingCurrentStep === i && !processingStepsDone[i]"></div>
-                <div class="ps-dot" *ngIf="processingCurrentStep < i"></div>
               </div>
               <div class="ps-info">
-                <span class="ps-label">{{ step.label }}</span>
-                <span class="ps-detail">{{ step.detail }}</span>
+                <span class="ps-label">{{ s.label }}</span>
               </div>
-              <span class="ps-time" *ngIf="processingStepsDone[i]">
-                {{ i === activePipeline.length - 1 ? (apiCallDuration ?? step.time) : step.time }}
-              </span>
+              <span class="ps-time">{{ s.durationMs / 1000 | number:'1.1-1' }}s</span>
               <div class="ps-bar-track">
-                <div class="ps-bar"
-                     [class.ps-bar--done]="processingStepsDone[i]"
-                     [class.ps-bar--pulse]="processingCurrentStep === i && !processingStepsDone[i] && i === activePipeline.length - 1"
-                     [style.width.%]="processingStepsDone[i] ? 100 : (processingCurrentStep === i ? processingStepProgress : 0)">
-                </div>
+                <div class="ps-bar ps-bar--done" style="width:100%"></div>
               </div>
             </div>
+
+            <!-- Active step (current) -->
+            <div class="pipeline-step pipeline-step--active" *ngIf="uploading && uploadCurrentStep">
+              <div class="ps-icon">
+                <div class="ps-spinner-sm"></div>
+              </div>
+              <div class="ps-info">
+                <span class="ps-label">{{ uploadCurrentStep }}</span>
+              </div>
+              <div class="ps-bar-track">
+                <div class="ps-bar ps-bar--pulse" [style.width.%]="uploadProgress"></div>
+              </div>
+            </div>
+
           </div>
         </div>
 
