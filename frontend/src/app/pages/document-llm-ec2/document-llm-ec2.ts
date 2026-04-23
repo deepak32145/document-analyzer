@@ -1,7 +1,6 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SnackbarService } from '../../shared/snackbar';
 
@@ -29,6 +28,10 @@ export class DocumentLlmEc2 {
   uploading     = false;
   uploadBtnText = 'Upload & Analyze';
 
+  uploadProgress    = 0;
+  uploadCurrentStep = '';
+  uploadSteps: { label: string; durationMs: number; progress: number }[] = [];
+
   ec2Result: Ec2Result | null = null;
   documentObjectUrl: SafeResourceUrl | null = null;
   documentRawUrl: string | null = null;
@@ -41,9 +44,9 @@ export class DocumentLlmEc2 {
   ];
 
   constructor(
-    private http: HttpClient,
     private snackbar: SnackbarService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private zone: NgZone
   ) {}
 
   triggerUpload() {
@@ -56,36 +59,81 @@ export class DocumentLlmEc2 {
     if (!input.files?.length) return;
     const file = input.files[0];
 
-    this.uploading     = true;
-    this.uploadBtnText = 'Analyzing...';
-    this.ec2Result     = null;
-    this.uploadedFile  = null;
+    this.uploading        = true;
+    this.uploadBtnText    = 'Analyzing...';
+    this.uploadProgress   = 0;
+    this.uploadCurrentStep = '';
+    this.uploadSteps      = [];
+    this.ec2Result        = null;
+    this.uploadedFile     = null;
 
     const formData = new FormData();
     formData.append('files', file);
     formData.append('documentType', this.documentType);
 
-    this.http.post<any>('http://localhost:3000/api/upload-ec2', formData).subscribe({
-      next: (res) => {
-        this.uploading     = false;
-        this.uploadBtnText = 'Upload & Analyze';
-        this.uploadedFile  = file;
-        this.isImage       = file.type.startsWith('image/');
-        this.documentRawUrl    = URL.createObjectURL(file);
-        this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-        this.ec2Result     = this.parseEc2Response(res);
-        this.snackbar.success(`"${file.name}" analyzed successfully`);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.uploading     = false;
-        this.uploadBtnText = 'Upload & Analyze';
-        const msg = err.status === 0
-          ? 'Cannot reach the backend. Please ensure the local server is running.'
-          : err.error?.error ?? `Upload failed (${err.status})`;
-        this.snackbar.error(msg);
-        this.fileInput.nativeElement.value = '';
-      }
-    });
+    let lastEventTime = Date.now();
+    let lastEvent: any = null;
+
+    fetch('http://172.16.3.190:80/upload/streams', { method: 'POST', body: formData })
+      .then(async (response) => {
+        if (!response.ok || !response.body) throw new Error('Upload failed');
+
+        const reader  = response.body.getReader();
+        const decoder = new TextDecoder();
+        let lineBuffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          lineBuffer += decoder.decode(value, { stream: true });
+          const lines = lineBuffer.split('\n');
+          lineBuffer  = lines.pop() ?? '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const msg = JSON.parse(trimmed);
+              const now = Date.now();
+              const durationMs = now - lastEventTime;
+              lastEventTime = now;
+
+              this.zone.run(() => {
+                if (lastEvent) {
+                  this.uploadSteps.push({ label: lastEvent.current_step, durationMs, progress: lastEvent.progress ?? 0 });
+                }
+                this.uploadProgress    = msg.progress ?? this.uploadProgress;
+                this.uploadCurrentStep = msg.current_step ?? '';
+                lastEvent = msg;
+              });
+            } catch { /* skip non-JSON lines */ }
+          }
+        }
+
+        this.zone.run(() => {
+          if (lastEvent) {
+            this.uploadSteps.push({ label: lastEvent.current_step, durationMs: Date.now() - lastEventTime, progress: lastEvent.progress ?? 100 });
+          }
+          this.uploadProgress    = 100;
+          this.uploadedFile      = file;
+          this.isImage           = file.type.startsWith('image/');
+          this.documentRawUrl    = URL.createObjectURL(file);
+          this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
+          this.ec2Result         = this.parseEc2Response(lastEvent ?? {});
+          this.uploading         = false;
+          this.uploadBtnText     = 'Upload & Analyze';
+          this.snackbar.success(`"${file.name}" analyzed successfully`);
+        });
+      })
+      .catch(() => {
+        this.zone.run(() => {
+          this.uploading     = false;
+          this.uploadBtnText = 'Upload & Analyze';
+          this.snackbar.error('Cannot reach EC2. Please check your connection.');
+          this.fileInput.nativeElement.value = '';
+        });
+      });
   }
 
   private extractKV(node: any, result: { key: string; value: string }[], parentKey = ''): void {

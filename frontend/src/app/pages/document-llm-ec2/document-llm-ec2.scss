@@ -164,33 +164,152 @@ $small-bp:   480px;
   svg { color: $green-dark; flex-shrink: 0; }
 }
 
-// ── Analyzing skeleton ──────────────────────────────────────
-.analyzing-state {
-  padding: 32px;
+// ── Streaming progress bar ──────────────────────────────────
+.stream-bar-card {
   background: $white;
-  border: 1px solid $border;
-  border-radius: 8px;
+  border: 1px solid #b8dfc4;
+  border-radius: 10px;
+  padding: 22px 24px 18px;
   margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(26, 92, 46, 0.08);
 }
 
-.skeleton-line {
+.stream-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.stream-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.stream-bar-step-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: $green-dark;
+  letter-spacing: 0.1px;
+}
+
+.stream-bar-pct {
+  font-size: 28px;
+  font-weight: 800;
+  color: $green-dark;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.stream-bar-pct-unit {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin-left: 1px;
+  opacity: 0.7;
+}
+
+.stream-bar-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba($green-dark, 0.2);
+  border-top-color: $green-dark;
+  border-radius: 50%;
+  animation: ec2-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ec2-spin { to { transform: rotate(360deg); } }
+
+// The bar track
+.stream-bar-track {
+  width: 100%;
   height: 14px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  animation: shimmer 1.4s infinite;
-  width: 80%;
-
-  &--wide  { width: 60%; height: 20px; margin-bottom: 18px; }
-  &--short { width: 40%; }
+  background: #e8f2ec;
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative;
 }
 
-.analyzing-label {
-  font-size: 13px;
-  color: $text-light;
-  margin-top: 16px;
-  margin-bottom: 0;
+// The fill
+.stream-bar-fill {
+  height: 100%;
+  background: $green-dark;
+  border-radius: 7px;
+  transition: width 0.6s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 0;
+
+  &--active {
+    background: linear-gradient(90deg, $green-dark 0%, #2d7a42 60%, #3a9952 100%);
+    background-size: 200% 100%;
+    animation: bar-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+.stream-bar-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba($white, 0.9);
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes bar-shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+// Completed step chips
+.stream-bar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.stream-bar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px 4px 8px;
+  background: #f0f8f2;
+  border: 1px solid #b8dfc4;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: $green-dark;
+  transition: background 0.15s;
+
+  &:hover { background: #dff0e6; }
+}
+
+.stream-bar-chip-label {
+  color: $green-dark;
+}
+
+.stream-bar-chip-pct {
+  font-size: 10px;
+  font-weight: 700;
+  background: $green-dark;
+  color: $white;
+  border-radius: 8px;
+  padding: 0 5px;
+  line-height: 16px;
+}
+
+.stream-bar-chip-time {
+  color: $text-mid;
+  font-weight: 400;
+  font-size: 10px;
 }
 
 @keyframes shimmer {
