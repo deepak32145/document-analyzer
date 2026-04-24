@@ -499,15 +499,17 @@ export class BusinessFlow implements OnInit {
           for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
+            const jsonStr = trimmed.startsWith('data: ') ? trimmed.slice(6).trim() : trimmed;
+            if (!jsonStr || jsonStr === '[DONE]') continue;
             try {
-              const msg = JSON.parse(trimmed);
+              const msg = JSON.parse(jsonStr);
               const now = Date.now();
               const durationMs = now - lastEventTime;
               lastEventTime = now;
 
               this.zone.run(() => {
                 if (lastEvent) {
-                  this.uploadSteps.push({ label: lastEvent.current_step, durationMs });
+                  this.uploadSteps.push({ label: lastEvent.current_step, durationMs, progress: lastEvent.progress ?? 0 });
                 }
                 this.uploadProgress    = msg.progress ?? this.uploadProgress;
                 this.uploadCurrentStep = msg.current_step ?? '';
@@ -520,7 +522,7 @@ export class BusinessFlow implements OnInit {
         // Stream ended — finalise with last event data
         this.zone.run(() => {
           if (lastEvent) {
-            this.uploadSteps.push({ label: lastEvent.current_step, durationMs: Date.now() - lastEventTime });
+            this.uploadSteps.push({ label: lastEvent.current_step, durationMs: Date.now() - lastEventTime, progress: lastEvent.progress ?? 100 });
           }
           this.uploadProgress    = 100;
           this.apiCallDuration   = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
@@ -588,20 +590,50 @@ export class BusinessFlow implements OnInit {
     }
   }
 
-  private parseEc2Response(res: any): Ec2Result {
-    const textEntry   = res.text_extract?.[0];
-    const classEntry  = res.classification_results?.[0];
-    const nerEntry    = res.ner_results?.[0];
-    const rawStructured = res.strucured_data_extraction_results ?? [];
+  private flattenConfidence(node: any, result: Map<string, number>, parentKey = ''): void {
+    if (node === null || node === undefined) return;
+    if (typeof node === 'number') {
+      if (parentKey) result.set(parentKey, node);
+      return;
+    }
+    if (Array.isArray(node)) {
+      node.forEach(item => this.flattenConfidence(item, result, parentKey));
+      return;
+    }
+    if (typeof node === 'object') {
+      for (const [k, v] of Object.entries(node)) {
+        const compositeKey = parentKey ? `${parentKey} › ${k}` : k;
+        this.flattenConfidence(v, result, compositeKey);
+      }
+    }
+  }
 
-    const structuredData: { key: string; value: string }[] = [];
-    this.extractKV(rawStructured, structuredData);
+  private parseEc2Response(res: any): Ec2Result {
+    const textEntry       = res.text_extract?.[0];
+    const classEntry      = res.classification_results?.[0];
+    const nerEntry        = res.ner_results?.[0];
+    const structuredEntry = res.strucured_data_extraction_results?.[0];
+
+    const extractedData  = structuredEntry?.structured_data?.extracted_data ?? {};
+    const confidenceData = structuredEntry?.structured_data?.confidence ?? {};
+
+    const confidenceMap = new Map<string, number>();
+    this.flattenConfidence(confidenceData, confidenceMap);
+
+    const rawKV: { key: string; value: string }[] = [];
+    this.extractKV(extractedData, rawKV);
+
+    const structuredData = rawKV.map(kv => ({
+      ...kv,
+      confidence: confidenceMap.has(kv.key) ? (confidenceMap.get(kv.key) ?? null) : null,
+    }));
 
     return {
       filename:           textEntry?.filename ?? '',
       docType:            textEntry?.doc_type ?? null,
       extractedText:      textEntry?.text ?? '',
       classificationText: classEntry?.text ?? '',
+      confidenceClassify: textEntry?.confidence_classify ?? null,
       structuredData,
       nerEntities: (nerEntry?.ner_entities ?? []).map((e: any) => ({
         text:  e.text,

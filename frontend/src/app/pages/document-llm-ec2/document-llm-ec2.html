@@ -56,43 +56,75 @@
     </a>
   </div>
 
-  <!-- Streaming progress bar -->
-  <div class="stream-bar-card" *ngIf="uploading || uploadSteps.length > 0">
+  <!-- Streaming progress UI -->
+  <div class="ec2-progress-card" *ngIf="uploading || uploadSteps.length > 0">
 
-    <!-- Header: status icon + current step name + % counter -->
-    <div class="stream-bar-header">
-      <div class="stream-bar-title">
-        <div class="stream-bar-spinner" *ngIf="uploading"></div>
-        <svg *ngIf="!uploading" width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <circle cx="9" cy="9" r="9" fill="#1a5c2e"/>
-          <path d="M5 9l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Top row: title + big % counter -->
+    <div class="ec2-progress-header">
+      <div class="ec2-progress-title">
+        <div class="ec2-pulse-ring" *ngIf="uploading">
+          <div class="ec2-pulse-ring__dot"></div>
+        </div>
+        <svg *ngIf="!uploading" width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="10" fill="#1a5c2e"/>
+          <path d="M5.5 10l3 3 6-6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="stream-bar-step-name">
-          {{ uploading ? (uploadCurrentStep || 'Processing…') : 'Analysis Complete' }}
-        </span>
+        <div class="ec2-progress-title__text">
+          <span class="ec2-progress-title__main">{{ uploading ? 'Analysing Document' : 'Analysis Complete' }}</span>
+          <span class="ec2-progress-title__sub" *ngIf="uploading && uploadCurrentStep">
+            {{ uploadCurrentStep }}<span class="ec2-progress-title__arrow" *ngIf="uploadNextStep"> → {{ uploadNextStep }}</span>
+          </span>
+        </div>
       </div>
-      <span class="stream-bar-pct">{{ uploadProgress }}<span class="stream-bar-pct-unit">%</span></span>
+      <div class="ec2-pct-counter">
+        <span class="ec2-pct-counter__num">{{ uploadProgress }}</span>
+        <span class="ec2-pct-counter__unit">%</span>
+      </div>
     </div>
 
-    <!-- Horizontal progress bar -->
-    <div class="stream-bar-track">
-      <div class="stream-bar-fill"
-           [class.stream-bar-fill--active]="uploading"
-           [style.width.%]="uploadProgress">
-        <span class="stream-bar-label" *ngIf="uploading && uploadCurrentStep">{{ uploadCurrentStep }}</span>
+    <!-- Horizontal bar -->
+    <div class="ec2-bar-wrap">
+      <div class="ec2-bar-track">
+        <div class="ec2-bar-fill"
+             [class.ec2-bar-fill--running]="uploading"
+             [style.width.%]="uploadProgress">
+        </div>
       </div>
+      <span class="ec2-bar-end-label" *ngIf="!uploading">Done</span>
     </div>
 
-    <!-- Step milestone chips -->
-    <div class="stream-bar-chips" *ngIf="uploadSteps.length > 0">
-      <div class="stream-bar-chip" *ngFor="let s of uploadSteps; let i = index">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <circle cx="5" cy="5" r="5" fill="#1a5c2e"/>
-          <path d="M2.5 5l2 2 3-3" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
-        </svg>
-        <span class="stream-bar-chip-label">{{ s.label }}</span>
-        <span class="stream-bar-chip-pct">{{ s.progress }}%</span>
-        <span class="stream-bar-chip-time">{{ s.durationMs / 1000 | number:'1.1-1' }}s</span>
+    <!-- Step blocks — slide up one by one as each step completes -->
+    <div class="ec2-steps" *ngIf="uploadSteps.length > 0">
+      <div class="ec2-step-block" *ngFor="let s of uploadSteps; let i = index">
+        <div class="ec2-step-block__icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="7" fill="#1a5c2e"/>
+            <path d="M3.5 7l2.5 2.5 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="ec2-step-block__info">
+          <span class="ec2-step-block__name">{{ s.label }}</span>
+          <span class="ec2-step-block__elapsed" *ngIf="s.elapsed">{{ s.elapsed }}</span>
+        </div>
+        <div class="ec2-step-block__pct">{{ s.progress }}%</div>
+        <div class="ec2-step-block__bar">
+          <div class="ec2-step-block__bar-fill" [style.width.%]="s.progress"></div>
+        </div>
+      </div>
+
+      <!-- Active step placeholder -->
+      <div class="ec2-step-block ec2-step-block--active" *ngIf="uploading && uploadCurrentStep">
+        <div class="ec2-step-block__icon ec2-step-block__icon--spin">
+          <div class="ec2-mini-spinner"></div>
+        </div>
+        <div class="ec2-step-block__info">
+          <span class="ec2-step-block__name">{{ uploadCurrentStep }}</span>
+          <span class="ec2-step-block__elapsed">In progress…</span>
+        </div>
+        <div class="ec2-step-block__pct ec2-step-block__pct--live">{{ uploadProgress }}%</div>
+        <div class="ec2-step-block__bar">
+          <div class="ec2-step-block__bar-fill ec2-step-block__bar-fill--shimmer" [style.width.%]="uploadProgress"></div>
+        </div>
       </div>
     </div>
 
@@ -150,12 +182,17 @@
         <div class="llm-section" *ngIf="ec2Result.structuredData.length > 0">
           <div class="llm-section-title">Structured Data</div>
           <table class="llm-table">
-            <thead><tr><th>Field</th><th>Value</th></tr></thead>
+            <thead><tr><th>Field</th><th>Value</th><th>Confidence</th></tr></thead>
             <tbody>
               <ng-container *ngFor="let row of ec2Result.structuredData">
                 <tr *ngIf="row.value?.trim()">
                   <td class="llm-key">{{ row.key.includes(' › ') ? row.key.split(' › ').pop() : row.key }}</td>
                   <td class="llm-val">{{ row.value }}</td>
+                  <td class="llm-conf">
+                    <span *ngIf="row.confidence === 1" class="conf-badge conf-badge--high">High</span>
+                    <span *ngIf="row.confidence === 0" class="conf-badge conf-badge--low">Low</span>
+                    <span *ngIf="row.confidence === null" class="conf-badge">—</span>
+                  </td>
                 </tr>
               </ng-container>
             </tbody>

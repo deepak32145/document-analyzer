@@ -1702,12 +1702,17 @@
                 <div class="ec2-section" *ngIf="ec2Result.structuredData.length > 0">
                   <div class="ec2-section-title">Structured Data</div>
                   <table class="ec2-table">
-                    <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                    <thead><tr><th>Field</th><th>Value</th><th>Confidence</th></tr></thead>
                     <tbody>
                       <ng-container *ngFor="let row of ec2Result.structuredData">
                         <tr *ngIf="row.value?.trim()">
-                        <td class="ec2-key">{{ row.key.includes(' › ') ? row.key.split(' › ').pop() : row.key }}</td>
-                        <td class="ec2-val">{{ row.value }}</td>
+                          <td class="ec2-key">{{ row.key.includes(' › ') ? row.key.split(' › ').pop() : row.key }}</td>
+                          <td class="ec2-val">{{ row.value }}</td>
+                          <td class="ec2-conf">
+                            <span *ngIf="row.confidence === 1" class="conf-badge conf-badge--high">High</span>
+                            <span *ngIf="row.confidence === 0" class="conf-badge conf-badge--low">Low</span>
+                            <span *ngIf="row.confidence === null" class="conf-badge">—</span>
+                          </td>
                         </tr>
                       </ng-container>
                     </tbody>

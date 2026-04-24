@@ -10,7 +10,8 @@ export interface Ec2Result {
   docType: string | null;
   extractedText: string;
   classificationText: string;
-  structuredData: { key: string; value: string }[];
+  confidenceClassify: number | null;
+  structuredData: { key: string; value: string; confidence: number | null }[];
   nerEntities: NerEntity[];
 }
 
@@ -30,7 +31,8 @@ export class DocumentLlmEc2 {
 
   uploadProgress    = 0;
   uploadCurrentStep = '';
-  uploadSteps: { label: string; durationMs: number; progress: number }[] = [];
+  uploadNextStep    = '';
+  uploadSteps: { label: string; elapsed: string; progress: number }[] = [];
 
   ec2Result: Ec2Result | null = null;
   documentObjectUrl: SafeResourceUrl | null = null;
@@ -59,19 +61,19 @@ export class DocumentLlmEc2 {
     if (!input.files?.length) return;
     const file = input.files[0];
 
-    this.uploading        = true;
-    this.uploadBtnText    = 'Analyzing...';
-    this.uploadProgress   = 0;
+    this.uploading         = true;
+    this.uploadBtnText     = 'Analyzing...';
+    this.uploadProgress    = 0;
     this.uploadCurrentStep = '';
-    this.uploadSteps      = [];
-    this.ec2Result        = null;
-    this.uploadedFile     = null;
+    this.uploadNextStep    = '';
+    this.uploadSteps       = [];
+    this.ec2Result         = null;
+    this.uploadedFile      = null;
 
     const formData = new FormData();
     formData.append('files', file);
     formData.append('documentType', this.documentType);
 
-    let lastEventTime = Date.now();
     let lastEvent: any = null;
 
     fetch('http://172.16.3.190:80/upload/streams', { method: 'POST', body: formData })
@@ -93,18 +95,23 @@ export class DocumentLlmEc2 {
           for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
+            // Strip SSE "data: " prefix
+            const jsonStr = trimmed.startsWith('data: ') ? trimmed.slice(6).trim() : trimmed;
+            if (!jsonStr || jsonStr === '[DONE]') continue;
             try {
-              const msg = JSON.parse(trimmed);
-              const now = Date.now();
-              const durationMs = now - lastEventTime;
-              lastEventTime = now;
-
+              const msg = JSON.parse(jsonStr);
               this.zone.run(() => {
+                // Move previous active step into completed list
                 if (lastEvent) {
-                  this.uploadSteps.push({ label: lastEvent.current_step, durationMs, progress: lastEvent.progress ?? 0 });
+                  this.uploadSteps.push({
+                    label:    lastEvent.current_step,
+                    elapsed:  lastEvent.elapsed_time ?? '',
+                    progress: lastEvent.progress ?? 0,
+                  });
                 }
                 this.uploadProgress    = msg.progress ?? this.uploadProgress;
                 this.uploadCurrentStep = msg.current_step ?? '';
+                this.uploadNextStep    = msg.next_step ?? '';
                 lastEvent = msg;
               });
             } catch { /* skip non-JSON lines */ }
@@ -113,9 +120,14 @@ export class DocumentLlmEc2 {
 
         this.zone.run(() => {
           if (lastEvent) {
-            this.uploadSteps.push({ label: lastEvent.current_step, durationMs: Date.now() - lastEventTime, progress: lastEvent.progress ?? 100 });
+            this.uploadSteps.push({
+              label:    lastEvent.current_step,
+              elapsed:  lastEvent.elapsed_time ?? '',
+              progress: lastEvent.progress ?? 100,
+            });
           }
           this.uploadProgress    = 100;
+          this.uploadCurrentStep = '';
           this.uploadedFile      = file;
           this.isImage           = file.type.startsWith('image/');
           this.documentRawUrl    = URL.createObjectURL(file);
@@ -171,20 +183,50 @@ export class DocumentLlmEc2 {
     }
   }
 
-  private parseEc2Response(res: any): Ec2Result {
-    const textEntry   = res.text_extract?.[0];
-    const classEntry  = res.classification_results?.[0];
-    const nerEntry    = res.ner_results?.[0];
-    const rawStructured = res.strucured_data_extraction_results ?? [];
+  private flattenConfidence(node: any, result: Map<string, number>, parentKey = ''): void {
+    if (node === null || node === undefined) return;
+    if (typeof node === 'number') {
+      if (parentKey) result.set(parentKey, node);
+      return;
+    }
+    if (Array.isArray(node)) {
+      node.forEach(item => this.flattenConfidence(item, result, parentKey));
+      return;
+    }
+    if (typeof node === 'object') {
+      for (const [k, v] of Object.entries(node)) {
+        const compositeKey = parentKey ? `${parentKey} › ${k}` : k;
+        this.flattenConfidence(v, result, compositeKey);
+      }
+    }
+  }
 
-    const structuredData: { key: string; value: string }[] = [];
-    this.extractKV(rawStructured, structuredData);
+  private parseEc2Response(res: any): Ec2Result {
+    const textEntry       = res.text_extract?.[0];
+    const classEntry      = res.classification_results?.[0];
+    const nerEntry        = res.ner_results?.[0];
+    const structuredEntry = res.strucured_data_extraction_results?.[0];
+
+    const extractedData  = structuredEntry?.structured_data?.extracted_data ?? {};
+    const confidenceData = structuredEntry?.structured_data?.confidence ?? {};
+
+    const confidenceMap = new Map<string, number>();
+    this.flattenConfidence(confidenceData, confidenceMap);
+
+    const rawKV: { key: string; value: string }[] = [];
+    this.extractKV(extractedData, rawKV);
+
+    const structuredData = rawKV.map(kv => ({
+      ...kv,
+      confidence: confidenceMap.has(kv.key) ? (confidenceMap.get(kv.key) ?? null) : null,
+    }));
 
     return {
       filename:           textEntry?.filename ?? '',
       docType:            textEntry?.doc_type ?? null,
       extractedText:      textEntry?.text ?? '',
       classificationText: classEntry?.text ?? '',
+      confidenceClassify: textEntry?.confidence_classify ?? null,
       structuredData,
       nerEntities: (nerEntry?.ner_entities ?? []).map((e: any) => ({
         text:  e.text,
