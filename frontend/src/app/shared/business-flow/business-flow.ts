@@ -453,7 +453,7 @@ export class BusinessFlow implements OnInit {
   apiCallDuration: string | null = null;
   uploadProgress    = 0;
   uploadCurrentStep = '';
-  uploadSteps: { label: string; durationMs: number }[] = [];
+  uploadSteps: { label: string; durationMs: number; progress: number }[] = [];
 
   triggerUpload() {
     this.fileInput.nativeElement.value = '';
@@ -478,7 +478,8 @@ export class BusinessFlow implements OnInit {
     formData.append('documentType', this.documentType);
 
     let lastEventTime = Date.now();
-    let lastEvent: any = null;
+    // Accumulate result fields — the API may send data in earlier events and a bare ping as the last.
+    const resultData: any = {};
 
     fetch('http://172.16.3.190:80/upload/streams', { method: 'POST', body: formData })
       .then(async (response) => {
@@ -507,27 +508,31 @@ export class BusinessFlow implements OnInit {
               const durationMs = now - lastEventTime;
               lastEventTime = now;
 
+              // Merge data-bearing fields whenever they appear
+              if (msg.text_extract?.length)                      resultData.text_extract                      = msg.text_extract;
+              if (msg.classification_results?.length)            resultData.classification_results            = msg.classification_results;
+              if (msg.strucured_data_extraction_results?.length) resultData.strucured_data_extraction_results = msg.strucured_data_extraction_results;
+              if (msg.ner_results?.length)                       resultData.ner_results                       = msg.ner_results;
+
               this.zone.run(() => {
-                if (lastEvent) {
-                  this.uploadSteps.push({ label: lastEvent.current_step, durationMs, progress: lastEvent.progress ?? 0 });
-                }
+                // Push the step that just completed with the client-side time it actually took.
+                // durationMs = time since previous event = this step's real duration.
+                this.uploadSteps.push({ label: msg.current_step, durationMs, progress: msg.progress ?? 0 });
                 this.uploadProgress    = msg.progress ?? this.uploadProgress;
-                this.uploadCurrentStep = msg.current_step ?? '';
-                lastEvent = msg;
+                // Show the next step as active (current step is now completed above)
+                this.uploadCurrentStep = msg.next_step ?? '';
               });
             } catch { /* skip non-JSON lines */ }
           }
         }
 
-        // Stream ended — finalise with last event data
+        // Stream ended — finalise state (all steps already pushed during stream)
         this.zone.run(() => {
-          if (lastEvent) {
-            this.uploadSteps.push({ label: lastEvent.current_step, durationMs: Date.now() - lastEventTime, progress: lastEvent.progress ?? 100 });
-          }
           this.uploadProgress    = 100;
+          this.uploadCurrentStep = '';
           this.apiCallDuration   = ((Date.now() - this.apiCallStartTime) / 1000).toFixed(2) + 's';
           this.uploadedFile      = file;
-          this.ec2Result         = this.parseEc2Response(lastEvent ?? {});
+          this.ec2Result         = this.parseEc2Response(resultData);
           this.documentRawUrl    = URL.createObjectURL(file);
           this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
           this.isImage           = file.type.startsWith('image/');
