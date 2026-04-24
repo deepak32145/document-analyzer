@@ -75,6 +75,9 @@ export class DocumentLlmEc2 {
     formData.append('documentType', this.documentType);
 
     let lastEvent: any = null;
+    // Accumulate result fields across all events — the API may send data
+    // fields in earlier events and a bare status ping as the final event.
+    const resultData: any = {};
 
     fetch('http://172.16.3.190:80/upload/streams', { method: 'POST', body: formData })
       .then(async (response) => {
@@ -100,6 +103,13 @@ export class DocumentLlmEc2 {
             if (!jsonStr || jsonStr === '[DONE]') continue;
             try {
               const msg = JSON.parse(jsonStr);
+
+              // Merge data-bearing fields whenever they appear in any event
+              if (msg.text_extract?.length)                        resultData.text_extract                        = msg.text_extract;
+              if (msg.classification_results?.length)              resultData.classification_results              = msg.classification_results;
+              if (msg.strucured_data_extraction_results?.length)   resultData.strucured_data_extraction_results   = msg.strucured_data_extraction_results;
+              if (msg.ner_results?.length)                         resultData.ner_results                         = msg.ner_results;
+
               this.zone.run(() => {
                 // Move previous active step into completed list
                 if (lastEvent) {
@@ -132,7 +142,7 @@ export class DocumentLlmEc2 {
           this.isImage           = file.type.startsWith('image/');
           this.documentRawUrl    = URL.createObjectURL(file);
           this.documentObjectUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.documentRawUrl);
-          this.ec2Result         = this.parseEc2Response(lastEvent ?? {});
+          this.ec2Result         = this.parseEc2Response(resultData);
           this.uploading         = false;
           this.uploadBtnText     = 'Upload & Analyze';
           this.snackbar.success(`"${file.name}" analyzed successfully`);
